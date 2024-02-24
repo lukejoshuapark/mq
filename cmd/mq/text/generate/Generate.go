@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/lukejoshuapark/mq/cmd/text/parse"
+	"github.com/lukejoshuapark/mq/cmd/mq/text/parse"
 )
 
 func Generate(file parse.File, fileName string) error {

@@ -3,8 +3,8 @@ package text
 import (
 	"strings"
 
-	"github.com/lukejoshuapark/mq/cmd/text/generate"
-	"github.com/lukejoshuapark/mq/cmd/text/parse"
+	"github.com/lukejoshuapark/mq/cmd/mq/text/generate"
+	"github.com/lukejoshuapark/mq/cmd/mq/text/parse"
 )
 
 func ProcessFile(inputFileName string) error {
