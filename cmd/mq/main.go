@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lukejoshuapark/mq/cmd/text"
+	"github.com/lukejoshuapark/mq/cmd/mq/text"
 	"github.com/urfave/cli/v2"
 )
 
