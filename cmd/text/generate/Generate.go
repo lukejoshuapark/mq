@@ -217,15 +217,13 @@ func generateSetupMethod(structName string, method parse.Method, w *bufio.Writer
 }
 
 func generateVerifyMethod(structName string, method parse.Method, w *bufio.Writer) error {
-	if _, err := w.WriteString("func (m *" + structName + ") Verify" + method.Name + "("); err != nil {
+	if _, err := w.WriteString("func (m *" + structName + ") Verify" + method.Name + "(count mq.Count"); err != nil {
 		return err
 	}
 
-	for i, input := range method.Inputs {
-		if i != 0 {
-			if _, err := w.WriteString(", "); err != nil {
-				return err
-			}
+	for _, input := range method.Inputs {
+		if _, err := w.WriteString(", "); err != nil {
+			return err
 		}
 
 		if _, err := w.WriteString(input.Name + " mq.Input[" + input.Type + "]"); err != nil {
@@ -233,7 +231,7 @@ func generateVerifyMethod(structName string, method parse.Method, w *bufio.Write
 		}
 	}
 
-	if _, err := w.WriteString(") {\n"); err != nil {
+	if _, err := w.WriteString(") {\n\tc := 0\n\n"); err != nil {
 		return err
 	}
 
@@ -254,12 +252,16 @@ func generateVerifyMethod(structName string, method parse.Method, w *bufio.Write
 		}
 	}
 
-	if _, err := w.WriteString("{\n\t\t\treturn\n\t\t}\n\t}\n\n"); err != nil {
+	if _, err := w.WriteString("{\n\t\t\tc++\n\t\t}\n\t}\n\n"); err != nil {
+		return err
+	}
+
+	if _, err := w.WriteString("\tif !count.ShouldPass(c) {\n"); err != nil {
 		return err
 	}
 
 	// TODO: Improve panic.
-	if _, err := w.WriteString("\tpanic(\"no calls were made with those arguments\")\n}\n\n"); err != nil {
+	if _, err := w.WriteString("\t\tpanic(\"unexpected numbers of calls were made with those arguments\")\n\t}\n}\n\n"); err != nil {
 		return err
 	}
 
