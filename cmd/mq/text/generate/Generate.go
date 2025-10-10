@@ -80,22 +80,24 @@ func generateMockImplementation(intf parse.Interface, w *bufio.Writer) error {
 		return err
 	}
 
-	if _, err := w.WriteString("type " + structName + " struct {\n"); err != nil {
+	if _, err := w.WriteString("type " + structName + intf.TypeParams + " struct {\n"); err != nil {
 		return err
 	}
 
+	typeParamNames := getTypeParamNames(intf.TypeParams)
+
 	for _, method := range intf.Methods {
 		lowerCaseName := getStringWithFirstLetterLowercase(method.Name)
-		if _, err := w.WriteString("\t" + lowerCaseName + "Setups []Mock" + intf.Name + method.Name + "Setup\n"); err != nil {
+		if _, err := w.WriteString("\t" + lowerCaseName + "Setups []Mock" + intf.Name + method.Name + "Setup" + typeParamNames + "\n"); err != nil {
 			return err
 		}
 
-		if _, err := w.WriteString("\t" + lowerCaseName + "Calls []Mock" + intf.Name + method.Name + "Call\n"); err != nil {
+		if _, err := w.WriteString("\t" + lowerCaseName + "Calls []Mock" + intf.Name + method.Name + "Call" + typeParamNames + "\n"); err != nil {
 			return err
 		}
 	}
 
-	if _, err := w.WriteString("}\n\nvar _ " + intf.Name + " = &" + structName + "{}\n\n"); err != nil {
+	if _, err := w.WriteString("}\n\n"); err != nil {
 		return err
 	}
 
@@ -105,7 +107,7 @@ func generateMockImplementation(intf parse.Interface, w *bufio.Writer) error {
 		return err
 	}
 
-	if _, err := w.WriteString("func New" + structName + "() *" + structName + " {\n\treturn &" + structName + "{}\n}\n\n"); err != nil {
+	if _, err := w.WriteString("func New" + structName + intf.TypeParams + "() *" + structName + typeParamNames + " {\n\treturn &" + structName + typeParamNames + "{}\n}\n\n"); err != nil {
 		return err
 	}
 
@@ -114,7 +116,7 @@ func generateMockImplementation(intf parse.Interface, w *bufio.Writer) error {
 
 func generateMethods(structName string, intf parse.Interface, w *bufio.Writer) error {
 	for _, method := range intf.Methods {
-		if err := generateMethod(structName, intf.Name, method, w); err != nil {
+		if err := generateMethod(structName, intf.Name, intf.TypeParams, method, w); err != nil {
 			return err
 		}
 	}
@@ -122,12 +124,12 @@ func generateMethods(structName string, intf parse.Interface, w *bufio.Writer) e
 	return nil
 }
 
-func generateMethod(structName string, interfaceName string, method parse.Method, w *bufio.Writer) error {
+func generateMethod(structName string, interfaceName string, interfaceTypeParams string, method parse.Method, w *bufio.Writer) error {
 	typePrefix := structName + method.Name
 	setupType := typePrefix + "Setup"
 	callType := typePrefix + "Call"
 
-	if _, err := w.WriteString("type " + setupType + " struct {\n"); err != nil {
+	if _, err := w.WriteString("type " + setupType + interfaceTypeParams + " struct {\n"); err != nil {
 		return err
 	}
 
@@ -149,7 +151,7 @@ func generateMethod(structName string, interfaceName string, method parse.Method
 		return err
 	}
 
-	if _, err := w.WriteString("type " + callType + " struct {\n"); err != nil {
+	if _, err := w.WriteString("type " + callType + interfaceTypeParams + " struct {\n"); err != nil {
 		return err
 	}
 
@@ -164,29 +166,31 @@ func generateMethod(structName string, interfaceName string, method parse.Method
 		return err
 	}
 
-	if err := generateSetupMethod(structName, method, w); err != nil {
+	typeParamNames := getTypeParamNames(interfaceTypeParams)
+
+	if err := generateSetupMethod(structName, interfaceTypeParams, typeParamNames, method, w); err != nil {
 		return err
 	}
 
-	if err := generateVerifyMethod(structName, interfaceName, method, w); err != nil {
+	if err := generateVerifyMethod(structName, interfaceName, interfaceTypeParams, typeParamNames, method, w); err != nil {
 		return err
 	}
 
-	if err := generateActualMethod(structName, method, w); err != nil {
+	if err := generateActualMethod(structName, interfaceTypeParams, typeParamNames, method, w); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func generateSetupMethod(structName string, method parse.Method, w *bufio.Writer) error {
+func generateSetupMethod(structName string, interfaceTypeParams string, typeParamNames string, method parse.Method, w *bufio.Writer) error {
 	// Add documentation comment
 	comment := fmt.Sprintf("// Setup%s configures the mock to return specific outputs when %s is called with matching inputs.\n", method.Name, method.Name)
 	if _, err := w.WriteString(comment); err != nil {
 		return err
 	}
 
-	if _, err := w.WriteString("func (m *" + structName + ") Setup" + method.Name + "("); err != nil {
+	if _, err := w.WriteString("func (m *" + structName + typeParamNames + ") Setup" + method.Name + "("); err != nil {
 		return err
 	}
 
@@ -222,7 +226,7 @@ func generateSetupMethod(structName string, method parse.Method, w *bufio.Writer
 	}
 
 	lowerCaseName := getStringWithFirstLetterLowercase(method.Name)
-	if _, err := w.WriteString("\tm." + lowerCaseName + "Setups = append(m." + lowerCaseName + "Setups, " + structName + method.Name + "Setup{\n"); err != nil {
+	if _, err := w.WriteString("\tm." + lowerCaseName + "Setups = append(m." + lowerCaseName + "Setups, " + structName + method.Name + "Setup" + typeParamNames + "{\n"); err != nil {
 		return err
 	}
 
@@ -247,14 +251,14 @@ func generateSetupMethod(structName string, method parse.Method, w *bufio.Writer
 	return nil
 }
 
-func generateVerifyMethod(structName string, interfaceName string, method parse.Method, w *bufio.Writer) error {
+func generateVerifyMethod(structName string, interfaceName string, interfaceTypeParams string, typeParamNames string, method parse.Method, w *bufio.Writer) error {
 	// Add documentation comment
 	comment := fmt.Sprintf("// Verify%s checks that %s was called the expected number of times with matching inputs.\n", method.Name, method.Name)
 	if _, err := w.WriteString(comment); err != nil {
 		return err
 	}
 
-	if _, err := w.WriteString("func (m *" + structName + ") Verify" + method.Name + "(count mq.Count"); err != nil {
+	if _, err := w.WriteString("func (m *" + structName + typeParamNames + ") Verify" + method.Name + "(count mq.Count"); err != nil {
 		return err
 	}
 
@@ -327,8 +331,8 @@ func generateVerifyMethod(structName string, interfaceName string, method parse.
 	return nil
 }
 
-func generateActualMethod(structName string, method parse.Method, w *bufio.Writer) error {
-	if _, err := w.WriteString("func (m *" + structName + ") " + method.Name + "("); err != nil {
+func generateActualMethod(structName string, interfaceTypeParams string, typeParamNames string, method parse.Method, w *bufio.Writer) error {
+	if _, err := w.WriteString("func (m *" + structName + typeParamNames + ") " + method.Name + "("); err != nil {
 		return err
 	}
 
@@ -408,7 +412,7 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 			return err
 		}
 
-		if _, err := w.WriteString("\t\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call{\n"); err != nil {
+		if _, err := w.WriteString("\t\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call" + typeParamNames + "{\n"); err != nil {
 			return err
 		}
 
@@ -449,7 +453,7 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 			return err
 		}
 
-		if _, err := w.WriteString("\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call{})\n\n"); err != nil {
+		if _, err := w.WriteString("\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call" + typeParamNames + "{})\n\n"); err != nil {
 			return err
 		}
 
@@ -507,6 +511,41 @@ func normalizeTypeForSetup(fieldType string) string {
 		return "[]" + strings.TrimPrefix(fieldType, "...")
 	}
 	return fieldType
+}
+
+// getTypeParamNames extracts just the type parameter names from a type params string
+// e.g., "[T any]" -> "[T]", "[K comparable, V any]" -> "[K, V]"
+func getTypeParamNames(typeParams string) string {
+	if typeParams == "" {
+		return ""
+	}
+
+	// Remove brackets
+	inner := strings.TrimPrefix(typeParams, "[")
+	inner = strings.TrimSuffix(inner, "]")
+
+	if inner == "" {
+		return ""
+	}
+
+	// Split by comma
+	parts := strings.Split(inner, ",")
+	names := make([]string, 0, len(parts))
+
+	for _, part := range parts {
+		// Take first word (the name) before any constraint
+		part = strings.TrimSpace(part)
+		words := strings.Fields(part)
+		if len(words) > 0 {
+			names = append(names, words[0])
+		}
+	}
+
+	if len(names) == 0 {
+		return ""
+	}
+
+	return "[" + strings.Join(names, ", ") + "]"
 }
 
 // getMqImportPath attempts to find the module path for the mq library by looking for go.mod

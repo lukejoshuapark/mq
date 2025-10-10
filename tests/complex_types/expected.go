@@ -20,8 +20,6 @@ type MockDataStore struct {
 	processBatchCalls []MockDataStoreProcessBatchCall
 }
 
-var _ DataStore = &MockDataStore{}
-
 // NewMockDataStore creates a new instance of MockDataStore.
 func NewMockDataStore() *MockDataStore {
 	return &MockDataStore{}

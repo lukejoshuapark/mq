@@ -19,8 +19,6 @@ type MockUserRepository struct {
 	listUsersCalls []MockUserRepositoryListUsersCall
 }
 
-var _ UserRepository = &MockUserRepository{}
-
 // NewMockUserRepository creates a new instance of MockUserRepository.
 func NewMockUserRepository() *MockUserRepository {
 	return &MockUserRepository{}

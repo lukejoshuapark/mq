@@ -12,8 +12,6 @@ type MockSimpleService struct {
 	doSomethingCalls []MockSimpleServiceDoSomethingCall
 }
 
-var _ SimpleService = &MockSimpleService{}
-
 // NewMockSimpleService creates a new instance of MockSimpleService.
 func NewMockSimpleService() *MockSimpleService {
 	return &MockSimpleService{}

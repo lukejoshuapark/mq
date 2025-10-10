@@ -14,8 +14,6 @@ type MockLogger struct {
 	logWithLevelCalls []MockLoggerLogWithLevelCall
 }
 
-var _ Logger = &MockLogger{}
-
 // NewMockLogger creates a new instance of MockLogger.
 func NewMockLogger() *MockLogger {
 	return &MockLogger{}

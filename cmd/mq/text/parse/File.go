@@ -39,7 +39,7 @@ func ParseFile(fileName string) (File, error) {
 				continue
 			}
 
-			intf, err := ParseInterface(typeSpec.Name.Name, interfaceType)
+			intf, err := ParseInterface(typeSpec.Name.Name, typeSpec.TypeParams, interfaceType)
 			if err != nil {
 				return File{}, err
 			}

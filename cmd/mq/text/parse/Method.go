@@ -35,7 +35,7 @@ func ParseMethod(method *ast.Field) (Method, error) {
 }
 
 func getMethodName(method *ast.Field) (string, error) {
-	if method.Names == nil || len(method.Names) == 0 {
+	if len(method.Names) == 0 {
 		return "", fmt.Errorf("method has no name (possibly an embedded interface)")
 	}
 	return method.Names[0].Name, nil

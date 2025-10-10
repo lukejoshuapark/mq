@@ -16,8 +16,6 @@ type MockStatusProvider struct {
 	refreshCalls []MockStatusProviderRefreshCall
 }
 
-var _ StatusProvider = &MockStatusProvider{}
-
 // NewMockStatusProvider creates a new instance of MockStatusProvider.
 func NewMockStatusProvider() *MockStatusProvider {
 	return &MockStatusProvider{}
