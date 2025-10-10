@@ -39,11 +39,7 @@ func (m *MockStatusProvider) SetupGetStatus(output0 mq.Output[string]) {
 
 // VerifyGetStatus checks that GetStatus was called the expected number of times with matching inputs.
 func (m *MockStatusProvider) VerifyGetStatus(count mq.Count) {
-	c := 0
-
-	for _, call := range m.getStatusCalls {
-		c++
-	}
+	c := len(m.getStatusCalls)
 
 	if !count.ShouldPass(c) {
 		panic(fmt.Sprintf("mock verification failed for StatusProvider.GetStatus: expected count not met (actual: %d)", c))
@@ -51,11 +47,10 @@ func (m *MockStatusProvider) VerifyGetStatus(count mq.Count) {
 }
 
 func (m *MockStatusProvider) GetStatus() string {
-	for _, setup := range m.getStatusSetups {
-			m.getStatusCalls = append(m.getStatusCalls, MockStatusProviderGetStatusCall{
-			})
+	if len(m.getStatusSetups) > 0 {
+		m.getStatusCalls = append(m.getStatusCalls, MockStatusProviderGetStatusCall{})
 
-			return setup.output0.Value()
+		return m.getStatusSetups[0].output0.Value()
 	}
 
 	panic("no mock setup found for MockStatusProvider.GetStatus with the provided arguments")
@@ -79,11 +74,7 @@ func (m *MockStatusProvider) SetupIsReady(output0 mq.Output[bool], output1 mq.Ou
 
 // VerifyIsReady checks that IsReady was called the expected number of times with matching inputs.
 func (m *MockStatusProvider) VerifyIsReady(count mq.Count) {
-	c := 0
-
-	for _, call := range m.isReadyCalls {
-		c++
-	}
+	c := len(m.isReadyCalls)
 
 	if !count.ShouldPass(c) {
 		panic(fmt.Sprintf("mock verification failed for StatusProvider.IsReady: expected count not met (actual: %d)", c))
@@ -91,11 +82,10 @@ func (m *MockStatusProvider) VerifyIsReady(count mq.Count) {
 }
 
 func (m *MockStatusProvider) IsReady() (bool, error) {
-	for _, setup := range m.isReadySetups {
-			m.isReadyCalls = append(m.isReadyCalls, MockStatusProviderIsReadyCall{
-			})
+	if len(m.isReadySetups) > 0 {
+		m.isReadyCalls = append(m.isReadyCalls, MockStatusProviderIsReadyCall{})
 
-			return setup.output0.Value(), setup.output1.Value()
+		return m.isReadySetups[0].output0.Value(), m.isReadySetups[0].output1.Value()
 	}
 
 	panic("no mock setup found for MockStatusProvider.IsReady with the provided arguments")
@@ -115,11 +105,7 @@ func (m *MockStatusProvider) SetupRefresh() {
 
 // VerifyRefresh checks that Refresh was called the expected number of times with matching inputs.
 func (m *MockStatusProvider) VerifyRefresh(count mq.Count) {
-	c := 0
-
-	for _, call := range m.refreshCalls {
-		c++
-	}
+	c := len(m.refreshCalls)
 
 	if !count.ShouldPass(c) {
 		panic(fmt.Sprintf("mock verification failed for StatusProvider.Refresh: expected count not met (actual: %d)", c))
@@ -127,11 +113,10 @@ func (m *MockStatusProvider) VerifyRefresh(count mq.Count) {
 }
 
 func (m *MockStatusProvider) Refresh() () {
-	for _, setup := range m.refreshSetups {
-			m.refreshCalls = append(m.refreshCalls, MockStatusProviderRefreshCall{
-			})
+	if len(m.refreshSetups) > 0 {
+		m.refreshCalls = append(m.refreshCalls, MockStatusProviderRefreshCall{})
 
-			return 
+		return 
 	}
 
 	panic("no mock setup found for MockStatusProvider.Refresh with the provided arguments")

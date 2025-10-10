@@ -265,17 +265,22 @@ func generateVerifyMethod(structName string, interfaceName string, method parse.
 		}
 	}
 
-	if _, err := w.WriteString(") {\n\tc := 0\n\n"); err != nil {
+	if _, err := w.WriteString(") {\n"); err != nil {
 		return err
 	}
 
 	lowerCaseName := getStringWithFirstLetterLowercase(method.Name)
-	if _, err := w.WriteString("\tfor _, call := range m." + lowerCaseName + "Calls {\n"); err != nil {
-		return err
-	}
 
 	// Only add condition check if there are inputs
 	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\tc := 0\n\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\tfor _, call := range m." + lowerCaseName + "Calls {\n"); err != nil {
+			return err
+		}
+
 		if _, err := w.WriteString("\t\tif "); err != nil {
 			return err
 		}
@@ -295,15 +300,15 @@ func generateVerifyMethod(structName string, interfaceName string, method parse.
 		if _, err := w.WriteString("{\n\t\t\tc++\n\t\t}\n"); err != nil {
 			return err
 		}
-	} else {
-		// For methods with no inputs, always count the call
-		if _, err := w.WriteString("\t\tc++\n"); err != nil {
+
+		if _, err := w.WriteString("\t}\n\n"); err != nil {
 			return err
 		}
-	}
-
-	if _, err := w.WriteString("\t}\n\n"); err != nil {
-		return err
+	} else {
+		// For methods with no inputs, just count the length of calls
+		if _, err := w.WriteString("\tc := len(m." + lowerCaseName + "Calls)\n\n"); err != nil {
+			return err
+		}
 	}
 
 	if _, err := w.WriteString("\tif !count.ShouldPass(c) {\n"); err != nil {
@@ -372,12 +377,13 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 	}
 
 	lowerCaseName := getStringWithFirstLetterLowercase(method.Name)
-	if _, err := w.WriteString("\tfor _, setup := range m." + lowerCaseName + "Setups {\n"); err != nil {
-		return err
-	}
 
 	// Only add condition check if there are inputs
 	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\tfor _, setup := range m." + lowerCaseName + "Setups {\n"); err != nil {
+			return err
+		}
+
 		if _, err := w.WriteString("\t\tif "); err != nil {
 			return err
 		}
@@ -397,53 +403,73 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 		if _, err := w.WriteString("{\n"); err != nil {
 			return err
 		}
-	}
 
-	if _, err := w.WriteString("\t\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call{\n"); err != nil {
-		return err
-	}
-
-	for _, input := range method.Inputs {
-		if _, err := w.WriteString("\t\t\t\t" + input.Name + ": " + input.Name + ",\n"); err != nil {
+		if _, err := w.WriteString("\t\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call{\n"); err != nil {
 			return err
 		}
-	}
 
-	if _, err := w.WriteString("\t\t\t})\n\n"); err != nil {
-		return err
-	}
-
-	if _, err := w.WriteString("\t\t\treturn "); err != nil {
-		return err
-	}
-
-	for i, output := range method.Outputs {
-		outputName := getOutputName(output, i)
-
-		if i != 0 {
-			if _, err := w.WriteString(", "); err != nil {
+		for _, input := range method.Inputs {
+			if _, err := w.WriteString("\t\t\t\t" + input.Name + ": " + input.Name + ",\n"); err != nil {
 				return err
 			}
 		}
 
-		if _, err := w.WriteString("setup." + outputName + ".Value()"); err != nil {
+		if _, err := w.WriteString("\t\t\t})\n\n"); err != nil {
 			return err
 		}
-	}
 
-	if _, err := w.WriteString("\n"); err != nil {
-		return err
-	}
-
-	// Close the if block if we had inputs
-	if len(method.Inputs) > 0 {
-		if _, err := w.WriteString("\t\t}\n"); err != nil {
+		if _, err := w.WriteString("\t\t\treturn "); err != nil {
 			return err
 		}
-	}
 
-	if _, err := w.WriteString("\t}\n\n"); err != nil {
-		return err
+		for i, output := range method.Outputs {
+			outputName := getOutputName(output, i)
+
+			if i != 0 {
+				if _, err := w.WriteString(", "); err != nil {
+					return err
+				}
+			}
+
+			if _, err := w.WriteString("setup." + outputName + ".Value()"); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString("\n\t\t}\n\t}\n\n"); err != nil {
+			return err
+		}
+	} else {
+		// For methods with no inputs, just use the first setup if it exists
+		if _, err := w.WriteString("\tif len(m." + lowerCaseName + "Setups) > 0 {\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call{})\n\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\treturn "); err != nil {
+			return err
+		}
+
+		for i, output := range method.Outputs {
+			outputName := getOutputName(output, i)
+
+			if i != 0 {
+				if _, err := w.WriteString(", "); err != nil {
+					return err
+				}
+			}
+
+			if _, err := w.WriteString("m." + lowerCaseName + "Setups[0]." + outputName + ".Value()"); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString("\n\t}\n\n"); err != nil {
+			return err
+		}
 	}
 
 	panicMsg := fmt.Sprintf("\tpanic(\"no mock setup found for %s.%s with the provided arguments\")\n}\n\n", structName, method.Name)
