@@ -195,18 +195,18 @@ func (m *MockDataStore) GetMultiple(ctx context.Context, keys []string) ([]inter
 
 type MockDataStoreProcessBatchSetup struct {
 	ctx mq.Input[context.Context]
-	items mq.Input[...interface{}]
+	items mq.Input[[]interface{}]
 	output0 mq.Output[int]
 	output1 mq.Output[error]
 }
 
 type MockDataStoreProcessBatchCall struct {
 	ctx context.Context
-	items ...interface{}
+	items []interface{}
 }
 
 // SetupProcessBatch configures the mock to return specific outputs when ProcessBatch is called with matching inputs.
-func (m *MockDataStore) SetupProcessBatch(ctx mq.Input[context.Context], items mq.Input[...interface{}], output0 mq.Output[int], output1 mq.Output[error]) {
+func (m *MockDataStore) SetupProcessBatch(ctx mq.Input[context.Context], items mq.Input[[]interface{}], output0 mq.Output[int], output1 mq.Output[error]) {
 	m.processBatchSetups = append(m.processBatchSetups, MockDataStoreProcessBatchSetup{
 		ctx: ctx,
 		items: items,
@@ -216,7 +216,7 @@ func (m *MockDataStore) SetupProcessBatch(ctx mq.Input[context.Context], items m
 }
 
 // VerifyProcessBatch checks that ProcessBatch was called the expected number of times with matching inputs.
-func (m *MockDataStore) VerifyProcessBatch(count mq.Count, ctx mq.Input[context.Context], items mq.Input[...interface{}]) {
+func (m *MockDataStore) VerifyProcessBatch(count mq.Count, ctx mq.Input[context.Context], items mq.Input[[]interface{}]) {
 	c := 0
 
 	for _, call := range m.processBatchCalls {

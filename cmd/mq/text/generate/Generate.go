@@ -132,7 +132,8 @@ func generateMethod(structName string, interfaceName string, method parse.Method
 	}
 
 	for _, input := range method.Inputs {
-		if _, err := w.WriteString("\t" + input.Name + " mq.Input[" + input.Type + "]\n"); err != nil {
+		normalizedType := normalizeTypeForSetup(input.Type)
+		if _, err := w.WriteString("\t" + input.Name + " mq.Input[" + normalizedType + "]\n"); err != nil {
 			return err
 		}
 	}
@@ -153,7 +154,8 @@ func generateMethod(structName string, interfaceName string, method parse.Method
 	}
 
 	for _, input := range method.Inputs {
-		if _, err := w.WriteString("\t" + input.Name + " " + input.Type + "\n"); err != nil {
+		normalizedType := normalizeTypeForSetup(input.Type)
+		if _, err := w.WriteString("\t" + input.Name + " " + normalizedType + "\n"); err != nil {
 			return err
 		}
 	}
@@ -195,7 +197,8 @@ func generateSetupMethod(structName string, method parse.Method, w *bufio.Writer
 			}
 		}
 
-		if _, err := w.WriteString(input.Name + " mq.Input[" + input.Type + "]"); err != nil {
+		normalizedType := normalizeTypeForSetup(input.Type)
+		if _, err := w.WriteString(input.Name + " mq.Input[" + normalizedType + "]"); err != nil {
 			return err
 		}
 	}
@@ -260,7 +263,8 @@ func generateVerifyMethod(structName string, interfaceName string, method parse.
 			return err
 		}
 
-		if _, err := w.WriteString(input.Name + " mq.Input[" + input.Type + "]"); err != nil {
+		normalizedType := normalizeTypeForSetup(input.Type)
+		if _, err := w.WriteString(input.Name + " mq.Input[" + normalizedType + "]"); err != nil {
 			return err
 		}
 	}
@@ -493,6 +497,16 @@ func getOutputName(output parse.Field, i int) string {
 
 func getStringWithFirstLetterLowercase(s string) string {
 	return strings.ToLower(s[:1]) + s[1:]
+}
+
+// normalizeTypeForSetup converts variadic types (...T) to slice types ([]T)
+// for use in setup structs and verify methods, since we can't use variadic
+// types as struct fields or in type parameters
+func normalizeTypeForSetup(fieldType string) string {
+	if strings.HasPrefix(fieldType, "...") {
+		return "[]" + strings.TrimPrefix(fieldType, "...")
+	}
+	return fieldType
 }
 
 // getMqImportPath attempts to find the module path for the mq library by looking for go.mod
