@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 
@@ -37,15 +36,14 @@ func generateHeader(file parse.File, w *bufio.Writer) error {
 		return err
 	}
 
-	// Detect the mq module path from go.mod
-	mqImportPath, err := getMqImportPath()
-	if err != nil {
-		// Fallback to hardcoded path if detection fails
-		mqImportPath = "github.com/lukejoshuapark/mq"
+	if !slices.Contains(file.Imports, "fmt") {
+		file.Imports = append(file.Imports, "fmt")
 	}
 
-	file.Imports = append(file.Imports, "fmt")
-	file.Imports = append(file.Imports, mqImportPath)
+	if !slices.Contains(file.Imports, "github.com/lukejoshuapark/mq") {
+		file.Imports = append(file.Imports, "github.com/lukejoshuapark/mq")
+	}
+
 	slices.Sort(file.Imports)
 
 	for _, imp := range file.Imports {
@@ -732,40 +730,4 @@ func getTypeParamNames(typeParams string) string {
 	}
 
 	return "[" + strings.Join(names, ", ") + "]"
-}
-
-// getMqImportPath attempts to find the module path for the mq library by looking for go.mod
-func getMqImportPath() (string, error) {
-	// Start from current directory and walk up to find go.mod
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	for {
-		goModPath := filepath.Join(dir, "go.mod")
-		if _, err := os.Stat(goModPath); err == nil {
-			// Found go.mod, read it to get the module name
-			content, err := os.ReadFile(goModPath)
-			if err != nil {
-				return "", err
-			}
-
-			lines := strings.Split(string(content), "\n")
-			for _, line := range lines {
-				line = strings.TrimSpace(line)
-				if strings.HasPrefix(line, "module ") {
-					return strings.TrimSpace(strings.TrimPrefix(line, "module")), nil
-				}
-			}
-		}
-
-		// Move up one directory
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			// Reached root without finding go.mod
-			return "", fmt.Errorf("go.mod not found")
-		}
-		dir = parent
-	}
 }
