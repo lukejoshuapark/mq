@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -36,7 +37,15 @@ func generateHeader(file parse.File, w *bufio.Writer) error {
 		return err
 	}
 
-	file.Imports = append(file.Imports, "github.com/lukejoshuapark/mq")
+	// Detect the mq module path from go.mod
+	mqImportPath, err := getMqImportPath()
+	if err != nil {
+		// Fallback to hardcoded path if detection fails
+		mqImportPath = "github.com/lukejoshuapark/mq"
+	}
+
+	file.Imports = append(file.Imports, "fmt")
+	file.Imports = append(file.Imports, mqImportPath)
 	slices.Sort(file.Imports)
 
 	for _, imp := range file.Imports {
@@ -64,6 +73,13 @@ func generateMockImplementations(file parse.File, w *bufio.Writer) error {
 
 func generateMockImplementation(intf parse.Interface, w *bufio.Writer) error {
 	structName := "Mock" + intf.Name
+
+	// Add documentation comment for the mock struct
+	comment := fmt.Sprintf("// %s is a mock implementation of the %s interface.\n", structName, intf.Name)
+	if _, err := w.WriteString(comment); err != nil {
+		return err
+	}
+
 	if _, err := w.WriteString("type " + structName + " struct {\n"); err != nil {
 		return err
 	}
@@ -83,6 +99,12 @@ func generateMockImplementation(intf parse.Interface, w *bufio.Writer) error {
 		return err
 	}
 
+	// Add documentation comment for the constructor
+	comment = fmt.Sprintf("// New%s creates a new instance of %s.\n", structName, structName)
+	if _, err := w.WriteString(comment); err != nil {
+		return err
+	}
+
 	if _, err := w.WriteString("func New" + structName + "() *" + structName + " {\n\treturn &" + structName + "{}\n}\n\n"); err != nil {
 		return err
 	}
@@ -92,7 +114,7 @@ func generateMockImplementation(intf parse.Interface, w *bufio.Writer) error {
 
 func generateMethods(structName string, intf parse.Interface, w *bufio.Writer) error {
 	for _, method := range intf.Methods {
-		if err := generateMethod(structName, method, w); err != nil {
+		if err := generateMethod(structName, intf.Name, method, w); err != nil {
 			return err
 		}
 	}
@@ -100,7 +122,7 @@ func generateMethods(structName string, intf parse.Interface, w *bufio.Writer) e
 	return nil
 }
 
-func generateMethod(structName string, method parse.Method, w *bufio.Writer) error {
+func generateMethod(structName string, interfaceName string, method parse.Method, w *bufio.Writer) error {
 	typePrefix := structName + method.Name
 	setupType := typePrefix + "Setup"
 	callType := typePrefix + "Call"
@@ -144,7 +166,7 @@ func generateMethod(structName string, method parse.Method, w *bufio.Writer) err
 		return err
 	}
 
-	if err := generateVerifyMethod(structName, method, w); err != nil {
+	if err := generateVerifyMethod(structName, interfaceName, method, w); err != nil {
 		return err
 	}
 
@@ -156,6 +178,12 @@ func generateMethod(structName string, method parse.Method, w *bufio.Writer) err
 }
 
 func generateSetupMethod(structName string, method parse.Method, w *bufio.Writer) error {
+	// Add documentation comment
+	comment := fmt.Sprintf("// Setup%s configures the mock to return specific outputs when %s is called with matching inputs.\n", method.Name, method.Name)
+	if _, err := w.WriteString(comment); err != nil {
+		return err
+	}
+
 	if _, err := w.WriteString("func (m *" + structName + ") Setup" + method.Name + "("); err != nil {
 		return err
 	}
@@ -216,7 +244,13 @@ func generateSetupMethod(structName string, method parse.Method, w *bufio.Writer
 	return nil
 }
 
-func generateVerifyMethod(structName string, method parse.Method, w *bufio.Writer) error {
+func generateVerifyMethod(structName string, interfaceName string, method parse.Method, w *bufio.Writer) error {
+	// Add documentation comment
+	comment := fmt.Sprintf("// Verify%s checks that %s was called the expected number of times with matching inputs.\n", method.Name, method.Name)
+	if _, err := w.WriteString(comment); err != nil {
+		return err
+	}
+
 	if _, err := w.WriteString("func (m *" + structName + ") Verify" + method.Name + "(count mq.Count"); err != nil {
 		return err
 	}
@@ -236,23 +270,39 @@ func generateVerifyMethod(structName string, method parse.Method, w *bufio.Write
 	}
 
 	lowerCaseName := getStringWithFirstLetterLowercase(method.Name)
-	if _, err := w.WriteString("\tfor _, call := range m." + lowerCaseName + "Calls {\n\t\tif "); err != nil {
+	if _, err := w.WriteString("\tfor _, call := range m." + lowerCaseName + "Calls {\n"); err != nil {
 		return err
 	}
 
-	for i, input := range method.Inputs {
-		if i != 0 {
-			if _, err := w.WriteString("&& "); err != nil {
+	// Only add condition check if there are inputs
+	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\t\tif "); err != nil {
+			return err
+		}
+
+		for i, input := range method.Inputs {
+			if i != 0 {
+				if _, err := w.WriteString("&& "); err != nil {
+					return err
+				}
+			}
+
+			if _, err := w.WriteString(input.Name + ".Compare(call." + input.Name + ") "); err != nil {
 				return err
 			}
 		}
 
-		if _, err := w.WriteString(input.Name + ".Compare(call." + input.Name + ") "); err != nil {
+		if _, err := w.WriteString("{\n\t\t\tc++\n\t\t}\n"); err != nil {
+			return err
+		}
+	} else {
+		// For methods with no inputs, always count the call
+		if _, err := w.WriteString("\t\tc++\n"); err != nil {
 			return err
 		}
 	}
 
-	if _, err := w.WriteString("{\n\t\t\tc++\n\t\t}\n\t}\n\n"); err != nil {
+	if _, err := w.WriteString("\t}\n\n"); err != nil {
 		return err
 	}
 
@@ -260,8 +310,8 @@ func generateVerifyMethod(structName string, method parse.Method, w *bufio.Write
 		return err
 	}
 
-	// TODO: Improve panic.
-	if _, err := w.WriteString("\t\tpanic(\"unexpected numbers of calls were made with those arguments\")\n\t}\n}\n\n"); err != nil {
+	panicMsg := fmt.Sprintf("\t\tpanic(fmt.Sprintf(\"mock verification failed for %s.%s: expected count not met (actual: %%d)\", c))\n\t}\n}\n\n", interfaceName, method.Name)
+	if _, err := w.WriteString(panicMsg); err != nil {
 		return err
 	}
 
@@ -322,23 +372,34 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 	}
 
 	lowerCaseName := getStringWithFirstLetterLowercase(method.Name)
-	if _, err := w.WriteString("\tfor _, setup := range m." + lowerCaseName + "Setups {\n\t\tif "); err != nil {
+	if _, err := w.WriteString("\tfor _, setup := range m." + lowerCaseName + "Setups {\n"); err != nil {
 		return err
 	}
 
-	for i, input := range method.Inputs {
-		if i != 0 {
-			if _, err := w.WriteString("&& "); err != nil {
+	// Only add condition check if there are inputs
+	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\t\tif "); err != nil {
+			return err
+		}
+
+		for i, input := range method.Inputs {
+			if i != 0 {
+				if _, err := w.WriteString("&& "); err != nil {
+					return err
+				}
+			}
+
+			if _, err := w.WriteString("setup." + input.Name + ".Compare(" + input.Name + ") "); err != nil {
 				return err
 			}
 		}
 
-		if _, err := w.WriteString("setup." + input.Name + ".Compare(" + input.Name + ") "); err != nil {
+		if _, err := w.WriteString("{\n"); err != nil {
 			return err
 		}
 	}
 
-	if _, err := w.WriteString("{\n\t\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call{\n"); err != nil {
+	if _, err := w.WriteString("\t\t\tm." + lowerCaseName + "Calls = append(m." + lowerCaseName + "Calls, " + structName + method.Name + "Call{\n"); err != nil {
 		return err
 	}
 
@@ -348,7 +409,11 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 		}
 	}
 
-	if _, err := w.WriteString("\t\t\t})\n\n\t\t\treturn "); err != nil {
+	if _, err := w.WriteString("\t\t\t})\n\n"); err != nil {
+		return err
+	}
+
+	if _, err := w.WriteString("\t\t\treturn "); err != nil {
 		return err
 	}
 
@@ -366,12 +431,23 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 		}
 	}
 
-	if _, err := w.WriteString("\n\t\t}\n\t}\n\n"); err != nil {
+	if _, err := w.WriteString("\n"); err != nil {
 		return err
 	}
 
-	// TODO: Improve panic.
-	if _, err := w.WriteString("\tpanic(\"no setups were created with those arguments\")\n}\n\n"); err != nil {
+	// Close the if block if we had inputs
+	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\t\t}\n"); err != nil {
+			return err
+		}
+	}
+
+	if _, err := w.WriteString("\t}\n\n"); err != nil {
+		return err
+	}
+
+	panicMsg := fmt.Sprintf("\tpanic(\"no mock setup found for %s.%s with the provided arguments\")\n}\n\n", structName, method.Name)
+	if _, err := w.WriteString(panicMsg); err != nil {
 		return err
 	}
 
@@ -380,12 +456,51 @@ func generateActualMethod(structName string, method parse.Method, w *bufio.Write
 
 func getOutputName(output parse.Field, i int) string {
 	if output.Name != "" {
+		// If the output has a name, use it
 		return output.Name
 	}
 
-	return fmt.Sprintf("o%v", i)
+	// Generate a name for unnamed outputs
+	// Use 'output' prefix instead of 'o' to avoid conflicts with user-defined names like 'o0'
+	return fmt.Sprintf("output%v", i)
 }
 
 func getStringWithFirstLetterLowercase(s string) string {
 	return strings.ToLower(s[:1]) + s[1:]
+}
+
+// getMqImportPath attempts to find the module path for the mq library by looking for go.mod
+func getMqImportPath() (string, error) {
+	// Start from current directory and walk up to find go.mod
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		goModPath := filepath.Join(dir, "go.mod")
+		if _, err := os.Stat(goModPath); err == nil {
+			// Found go.mod, read it to get the module name
+			content, err := os.ReadFile(goModPath)
+			if err != nil {
+				return "", err
+			}
+
+			lines := strings.Split(string(content), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "module ") {
+					return strings.TrimSpace(strings.TrimPrefix(line, "module")), nil
+				}
+			}
+		}
+
+		// Move up one directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached root without finding go.mod
+			return "", fmt.Errorf("go.mod not found")
+		}
+		dir = parent
+	}
 }

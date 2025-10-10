@@ -1,5 +1,4 @@
-//go:generate mq generate --input $GOFILE
-package example
+package multiple
 
 import "context"
 
@@ -12,4 +11,6 @@ type User struct {
 type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*User, error)
 	CreateUser(ctx context.Context, user *User) error
+	DeleteUser(ctx context.Context, id int) error
+	ListUsers(ctx context.Context) ([]*User, error)
 }

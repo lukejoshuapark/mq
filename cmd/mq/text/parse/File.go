@@ -9,7 +9,7 @@ import (
 
 type File struct {
 	PackageName string
-	Imports     []string // TODO: This.
+	Imports     []string
 	Interfaces  []Interface
 }
 
@@ -39,7 +39,11 @@ func ParseFile(fileName string) (File, error) {
 				continue
 			}
 
-			interfaces = append(interfaces, ParseInterface(typeSpec.Name.Name, interfaceType))
+			intf, err := ParseInterface(typeSpec.Name.Name, interfaceType)
+			if err != nil {
+				return File{}, err
+			}
+			interfaces = append(interfaces, intf)
 		}
 	}
 
