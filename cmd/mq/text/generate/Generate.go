@@ -323,8 +323,72 @@ func generateVerifyMethod(structName string, interfaceName string, interfaceType
 		return err
 	}
 
-	panicMsg := fmt.Sprintf("\t\tpanic(fmt.Sprintf(\"mock verification failed for %s.%s: expected count not met (actual: %%d)\", c))\n\t}\n}\n\n", interfaceName, method.Name)
-	if _, err := w.WriteString(panicMsg); err != nil {
+	// Generate detailed error message with all calls made
+	if _, err := w.WriteString("\t\tmsg := fmt.Sprintf(\"mock verification failed for " + interfaceName + "." + method.Name + ": expected count not met (actual: %d)\\n\", c)\n"); err != nil {
+		return err
+	}
+
+	if _, err := w.WriteString("\t\tmsg += fmt.Sprintf(\"Calls made (%d total):\\n\", len(m." + lowerCaseName + "Calls))\n"); err != nil {
+		return err
+	}
+
+	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\t\tfor i, call := range m." + lowerCaseName + "Calls {\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\t\tmsg += fmt.Sprintf(\"  [%d] "); err != nil {
+			return err
+		}
+
+		for i, input := range method.Inputs {
+			if i > 0 {
+				if _, err := w.WriteString(", "); err != nil {
+					return err
+				}
+			}
+			formatVerb := getFormatVerb(input.Type)
+			if _, err := w.WriteString(input.Name + "=" + formatVerb); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString("\\n\""); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString(", i"); err != nil {
+			return err
+		}
+
+		for _, input := range method.Inputs {
+			if _, err := w.WriteString(", call." + input.Name); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString(")\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\t}\n"); err != nil {
+			return err
+		}
+	} else {
+		if _, err := w.WriteString("\t\tfor i := range m." + lowerCaseName + "Calls {\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\t\tmsg += fmt.Sprintf(\"  [%d] (no parameters)\\n\", i)\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\t}\n"); err != nil {
+			return err
+		}
+	}
+
+	if _, err := w.WriteString("\t\tpanic(msg)\n\t}\n}\n\n"); err != nil {
 		return err
 	}
 
@@ -480,8 +544,120 @@ func generateActualMethod(structName string, interfaceTypeParams string, typePar
 		}
 	}
 
-	panicMsg := fmt.Sprintf("\tpanic(\"no mock setup found for %s.%s with the provided arguments\")\n}\n\n", structName, method.Name)
-	if _, err := w.WriteString(panicMsg); err != nil {
+	// Generate detailed error message with all setups registered
+	if _, err := w.WriteString("\t// No matching setup found, generate helpful error message\n"); err != nil {
+		return err
+	}
+
+	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\tmsg := fmt.Sprintf(\"no mock setup found for " + structName + "." + method.Name + " with the provided arguments: "); err != nil {
+			return err
+		}
+
+		for i, input := range method.Inputs {
+			if i > 0 {
+				if _, err := w.WriteString(", "); err != nil {
+					return err
+				}
+			}
+			formatVerb := getFormatVerb(input.Type)
+			if _, err := w.WriteString(input.Name + "=" + formatVerb); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString("\\n\""); err != nil {
+			return err
+		}
+
+		for _, input := range method.Inputs {
+			if _, err := w.WriteString(", " + input.Name); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString(")\n"); err != nil {
+			return err
+		}
+	} else {
+		if _, err := w.WriteString("\tmsg := \"no mock setup found for " + structName + "." + method.Name + "\\n\"\n"); err != nil {
+			return err
+		}
+	}
+
+	if _, err := w.WriteString("\tmsg += fmt.Sprintf(\"\\nSetups registered (%d total):\\n\", len(m." + lowerCaseName + "Setups))\n"); err != nil {
+		return err
+	}
+
+	if len(method.Inputs) > 0 {
+		if _, err := w.WriteString("\tfor i, setup := range m." + lowerCaseName + "Setups {\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\tmsg += fmt.Sprintf(\"  [%d] "); err != nil {
+			return err
+		}
+
+		for i, input := range method.Inputs {
+			if i > 0 {
+				if _, err := w.WriteString(", "); err != nil {
+					return err
+				}
+			}
+			formatVerb := getFormatVerb(input.Type)
+			if _, err := w.WriteString(input.Name + "=" + formatVerb); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString("\\n\""); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString(", i"); err != nil {
+			return err
+		}
+
+		for _, input := range method.Inputs {
+			if _, err := w.WriteString(", setup." + input.Name); err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.WriteString(")\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t}\n"); err != nil {
+			return err
+		}
+	} else {
+		if _, err := w.WriteString("\tfor i := range m." + lowerCaseName + "Setups {\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t\tmsg += fmt.Sprintf(\"  [%d] (no parameters)\\n\", i)\n"); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\t}\n"); err != nil {
+			return err
+		}
+	}
+
+	if _, err := w.WriteString("\tif len(m." + lowerCaseName + "Setups) == 0 {\n"); err != nil {
+		return err
+	}
+
+	if _, err := w.WriteString("\t\tmsg += \"  (no setups registered)\\n\"\n"); err != nil {
+		return err
+	}
+
+	if _, err := w.WriteString("\t}\n"); err != nil {
+		return err
+	}
+
+	if _, err := w.WriteString("\tpanic(msg)\n}\n\n"); err != nil {
 		return err
 	}
 
@@ -511,6 +687,16 @@ func normalizeTypeForSetup(fieldType string) string {
 		return "[]" + strings.TrimPrefix(fieldType, "...")
 	}
 	return fieldType
+}
+
+// getFormatVerb returns the appropriate fmt format verb for a field type.
+// For function types, returns "%p" to print the pointer address.
+// For other types, returns "%+v" for detailed formatting.
+func getFormatVerb(fieldType string) string {
+	if strings.HasPrefix(fieldType, "func(") || strings.Contains(fieldType, " func(") {
+		return "%p"
+	}
+	return "%+v"
 }
 
 // getTypeParamNames extracts just the type parameter names from a type params string

@@ -42,7 +42,12 @@ func (m *MockEventBus) VerifySubscribe(count mq.Count) {
 	c := len(m.subscribeCalls)
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for EventBus.Subscribe: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for EventBus.Subscribe: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.subscribeCalls))
+		for i := range m.subscribeCalls {
+			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+		}
+		panic(msg)
 	}
 }
 
@@ -53,7 +58,16 @@ func (m *MockEventBus) Subscribe() <-chan Event {
 		return m.subscribeSetups[0].output0.Value()
 	}
 
-	panic("no mock setup found for MockEventBus.Subscribe with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := "no mock setup found for MockEventBus.Subscribe\n"
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.subscribeSetups))
+	for i := range m.subscribeSetups {
+		msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+	}
+	if len(m.subscribeSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockEventBusPublishSetup struct {
@@ -84,7 +98,12 @@ func (m *MockEventBus) VerifyPublish(count mq.Count, events mq.Input[chan<- Even
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for EventBus.Publish: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for EventBus.Publish: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.publishCalls))
+		for i, call := range m.publishCalls {
+			msg += fmt.Sprintf("  [%d] events=%+v\n", i, call.events)
+		}
+		panic(msg)
 	}
 }
 
@@ -99,7 +118,16 @@ func (m *MockEventBus) Publish(events chan<- Event) error {
 		}
 	}
 
-	panic("no mock setup found for MockEventBus.Publish with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockEventBus.Publish with the provided arguments: events=%+v\n", events)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.publishSetups))
+	for i, setup := range m.publishSetups {
+		msg += fmt.Sprintf("  [%d] events=%+v\n", i, setup.events)
+	}
+	if len(m.publishSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockEventBusStreamSetup struct {
@@ -121,7 +149,12 @@ func (m *MockEventBus) VerifyStream(count mq.Count) {
 	c := len(m.streamCalls)
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for EventBus.Stream: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for EventBus.Stream: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.streamCalls))
+		for i := range m.streamCalls {
+			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+		}
+		panic(msg)
 	}
 }
 
@@ -132,7 +165,16 @@ func (m *MockEventBus) Stream() chan Event {
 		return m.streamSetups[0].output0.Value()
 	}
 
-	panic("no mock setup found for MockEventBus.Stream with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := "no mock setup found for MockEventBus.Stream\n"
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.streamSetups))
+	for i := range m.streamSetups {
+		msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+	}
+	if len(m.streamSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockEventBusCloseSetup struct {
@@ -161,7 +203,12 @@ func (m *MockEventBus) VerifyClose(count mq.Count, done mq.Input[<-chan struct{}
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for EventBus.Close: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for EventBus.Close: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.closeCalls))
+		for i, call := range m.closeCalls {
+			msg += fmt.Sprintf("  [%d] done=%+v\n", i, call.done)
+		}
+		panic(msg)
 	}
 }
 
@@ -176,6 +223,15 @@ func (m *MockEventBus) Close(done <-chan struct{}) () {
 		}
 	}
 
-	panic("no mock setup found for MockEventBus.Close with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockEventBus.Close with the provided arguments: done=%+v\n", done)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.closeSetups))
+	for i, setup := range m.closeSetups {
+		msg += fmt.Sprintf("  [%d] done=%+v\n", i, setup.done)
+	}
+	if len(m.closeSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 

@@ -4,18 +4,17 @@ package genericinterface
 import (
 	"context"
 	"fmt"
-
 	"github.com/lukejoshuapark/mq"
 )
 
 // MockRepository is a mock implementation of the Repository interface.
 type MockRepository[T any] struct {
-	getSetups  []MockRepositoryGetSetup[T]
-	getCalls   []MockRepositoryGetCall[T]
+	getSetups []MockRepositoryGetSetup[T]
+	getCalls []MockRepositoryGetCall[T]
 	saveSetups []MockRepositorySaveSetup[T]
-	saveCalls  []MockRepositorySaveCall[T]
+	saveCalls []MockRepositorySaveCall[T]
 	listSetups []MockRepositoryListSetup[T]
-	listCalls  []MockRepositoryListCall[T]
+	listCalls []MockRepositoryListCall[T]
 }
 
 // NewMockRepository creates a new instance of MockRepository.
@@ -24,22 +23,22 @@ func NewMockRepository[T any]() *MockRepository[T] {
 }
 
 type MockRepositoryGetSetup[T any] struct {
-	ctx     mq.Input[context.Context]
-	id      mq.Input[string]
+	ctx mq.Input[context.Context]
+	id mq.Input[string]
 	output0 mq.Output[T]
 	output1 mq.Output[error]
 }
 
 type MockRepositoryGetCall[T any] struct {
 	ctx context.Context
-	id  string
+	id string
 }
 
 // SetupGet configures the mock to return specific outputs when Get is called with matching inputs.
 func (m *MockRepository[T]) SetupGet(ctx mq.Input[context.Context], id mq.Input[string], output0 mq.Output[T], output1 mq.Output[error]) {
 	m.getSetups = append(m.getSetups, MockRepositoryGetSetup[T]{
-		ctx:     ctx,
-		id:      id,
+		ctx: ctx,
+		id: id,
 		output0: output0,
 		output1: output1,
 	})
@@ -56,7 +55,12 @@ func (m *MockRepository[T]) VerifyGet(count mq.Count, ctx mq.Input[context.Conte
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Repository.Get: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Repository.Get: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getCalls))
+		for i, call := range m.getCalls {
+			msg += fmt.Sprintf("  [%d] ctx=%+v, id=%+v\n", i, call.ctx, call.id)
+		}
+		panic(msg)
 	}
 }
 
@@ -65,32 +69,41 @@ func (m *MockRepository[T]) Get(ctx context.Context, id string) (T, error) {
 		if setup.ctx.Compare(ctx) && setup.id.Compare(id) {
 			m.getCalls = append(m.getCalls, MockRepositoryGetCall[T]{
 				ctx: ctx,
-				id:  id,
+				id: id,
 			})
 
 			return setup.output0.Value(), setup.output1.Value()
 		}
 	}
 
-	panic("no mock setup found for MockRepository.Get with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockRepository.Get with the provided arguments: ctx=%+v, id=%+v\n", ctx, id)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.getSetups))
+	for i, setup := range m.getSetups {
+		msg += fmt.Sprintf("  [%d] ctx=%+v, id=%+v\n", i, setup.ctx, setup.id)
+	}
+	if len(m.getSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockRepositorySaveSetup[T any] struct {
-	ctx     mq.Input[context.Context]
-	item    mq.Input[T]
+	ctx mq.Input[context.Context]
+	item mq.Input[T]
 	output0 mq.Output[error]
 }
 
 type MockRepositorySaveCall[T any] struct {
-	ctx  context.Context
+	ctx context.Context
 	item T
 }
 
 // SetupSave configures the mock to return specific outputs when Save is called with matching inputs.
 func (m *MockRepository[T]) SetupSave(ctx mq.Input[context.Context], item mq.Input[T], output0 mq.Output[error]) {
 	m.saveSetups = append(m.saveSetups, MockRepositorySaveSetup[T]{
-		ctx:     ctx,
-		item:    item,
+		ctx: ctx,
+		item: item,
 		output0: output0,
 	})
 }
@@ -106,7 +119,12 @@ func (m *MockRepository[T]) VerifySave(count mq.Count, ctx mq.Input[context.Cont
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Repository.Save: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Repository.Save: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.saveCalls))
+		for i, call := range m.saveCalls {
+			msg += fmt.Sprintf("  [%d] ctx=%+v, item=%+v\n", i, call.ctx, call.item)
+		}
+		panic(msg)
 	}
 }
 
@@ -114,7 +132,7 @@ func (m *MockRepository[T]) Save(ctx context.Context, item T) error {
 	for _, setup := range m.saveSetups {
 		if setup.ctx.Compare(ctx) && setup.item.Compare(item) {
 			m.saveCalls = append(m.saveCalls, MockRepositorySaveCall[T]{
-				ctx:  ctx,
+				ctx: ctx,
 				item: item,
 			})
 
@@ -122,11 +140,20 @@ func (m *MockRepository[T]) Save(ctx context.Context, item T) error {
 		}
 	}
 
-	panic("no mock setup found for MockRepository.Save with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockRepository.Save with the provided arguments: ctx=%+v, item=%+v\n", ctx, item)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.saveSetups))
+	for i, setup := range m.saveSetups {
+		msg += fmt.Sprintf("  [%d] ctx=%+v, item=%+v\n", i, setup.ctx, setup.item)
+	}
+	if len(m.saveSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockRepositoryListSetup[T any] struct {
-	ctx     mq.Input[context.Context]
+	ctx mq.Input[context.Context]
 	output0 mq.Output[[]T]
 	output1 mq.Output[error]
 }
@@ -138,7 +165,7 @@ type MockRepositoryListCall[T any] struct {
 // SetupList configures the mock to return specific outputs when List is called with matching inputs.
 func (m *MockRepository[T]) SetupList(ctx mq.Input[context.Context], output0 mq.Output[[]T], output1 mq.Output[error]) {
 	m.listSetups = append(m.listSetups, MockRepositoryListSetup[T]{
-		ctx:     ctx,
+		ctx: ctx,
 		output0: output0,
 		output1: output1,
 	})
@@ -155,7 +182,12 @@ func (m *MockRepository[T]) VerifyList(count mq.Count, ctx mq.Input[context.Cont
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Repository.List: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Repository.List: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.listCalls))
+		for i, call := range m.listCalls {
+			msg += fmt.Sprintf("  [%d] ctx=%+v\n", i, call.ctx)
+		}
+		panic(msg)
 	}
 }
 
@@ -170,17 +202,26 @@ func (m *MockRepository[T]) List(ctx context.Context) ([]T, error) {
 		}
 	}
 
-	panic("no mock setup found for MockRepository.List with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockRepository.List with the provided arguments: ctx=%+v\n", ctx)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.listSetups))
+	for i, setup := range m.listSetups {
+		msg += fmt.Sprintf("  [%d] ctx=%+v\n", i, setup.ctx)
+	}
+	if len(m.listSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 // MockCache is a mock implementation of the Cache interface.
 type MockCache[K comparable, V any] struct {
-	getSetups    []MockCacheGetSetup[K, V]
-	getCalls     []MockCacheGetCall[K, V]
-	setSetups    []MockCacheSetSetup[K, V]
-	setCalls     []MockCacheSetCall[K, V]
+	getSetups []MockCacheGetSetup[K, V]
+	getCalls []MockCacheGetCall[K, V]
+	setSetups []MockCacheSetSetup[K, V]
+	setCalls []MockCacheSetCall[K, V]
 	deleteSetups []MockCacheDeleteSetup[K, V]
-	deleteCalls  []MockCacheDeleteCall[K, V]
+	deleteCalls []MockCacheDeleteCall[K, V]
 }
 
 // NewMockCache creates a new instance of MockCache.
@@ -189,7 +230,7 @@ func NewMockCache[K comparable, V any]() *MockCache[K, V] {
 }
 
 type MockCacheGetSetup[K comparable, V any] struct {
-	key     mq.Input[K]
+	key mq.Input[K]
 	output0 mq.Output[V]
 	output1 mq.Output[bool]
 }
@@ -201,7 +242,7 @@ type MockCacheGetCall[K comparable, V any] struct {
 // SetupGet configures the mock to return specific outputs when Get is called with matching inputs.
 func (m *MockCache[K, V]) SetupGet(key mq.Input[K], output0 mq.Output[V], output1 mq.Output[bool]) {
 	m.getSetups = append(m.getSetups, MockCacheGetSetup[K, V]{
-		key:     key,
+		key: key,
 		output0: output0,
 		output1: output1,
 	})
@@ -218,7 +259,12 @@ func (m *MockCache[K, V]) VerifyGet(count mq.Count, key mq.Input[K]) {
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Cache.Get: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Cache.Get: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getCalls))
+		for i, call := range m.getCalls {
+			msg += fmt.Sprintf("  [%d] key=%+v\n", i, call.key)
+		}
+		panic(msg)
 	}
 }
 
@@ -233,23 +279,32 @@ func (m *MockCache[K, V]) Get(key K) (V, bool) {
 		}
 	}
 
-	panic("no mock setup found for MockCache.Get with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockCache.Get with the provided arguments: key=%+v\n", key)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.getSetups))
+	for i, setup := range m.getSetups {
+		msg += fmt.Sprintf("  [%d] key=%+v\n", i, setup.key)
+	}
+	if len(m.getSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockCacheSetSetup[K comparable, V any] struct {
-	key   mq.Input[K]
+	key mq.Input[K]
 	value mq.Input[V]
 }
 
 type MockCacheSetCall[K comparable, V any] struct {
-	key   K
+	key K
 	value V
 }
 
 // SetupSet configures the mock to return specific outputs when Set is called with matching inputs.
 func (m *MockCache[K, V]) SetupSet(key mq.Input[K], value mq.Input[V]) {
 	m.setSetups = append(m.setSetups, MockCacheSetSetup[K, V]{
-		key:   key,
+		key: key,
 		value: value,
 	})
 }
@@ -265,27 +320,41 @@ func (m *MockCache[K, V]) VerifySet(count mq.Count, key mq.Input[K], value mq.In
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Cache.Set: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Cache.Set: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.setCalls))
+		for i, call := range m.setCalls {
+			msg += fmt.Sprintf("  [%d] key=%+v, value=%+v\n", i, call.key, call.value)
+		}
+		panic(msg)
 	}
 }
 
-func (m *MockCache[K, V]) Set(key K, value V) {
+func (m *MockCache[K, V]) Set(key K, value V) () {
 	for _, setup := range m.setSetups {
 		if setup.key.Compare(key) && setup.value.Compare(value) {
 			m.setCalls = append(m.setCalls, MockCacheSetCall[K, V]{
-				key:   key,
+				key: key,
 				value: value,
 			})
 
-			return
+			return 
 		}
 	}
 
-	panic("no mock setup found for MockCache.Set with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockCache.Set with the provided arguments: key=%+v, value=%+v\n", key, value)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.setSetups))
+	for i, setup := range m.setSetups {
+		msg += fmt.Sprintf("  [%d] key=%+v, value=%+v\n", i, setup.key, setup.value)
+	}
+	if len(m.setSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockCacheDeleteSetup[K comparable, V any] struct {
-	key     mq.Input[K]
+	key mq.Input[K]
 	output0 mq.Output[bool]
 }
 
@@ -296,7 +365,7 @@ type MockCacheDeleteCall[K comparable, V any] struct {
 // SetupDelete configures the mock to return specific outputs when Delete is called with matching inputs.
 func (m *MockCache[K, V]) SetupDelete(key mq.Input[K], output0 mq.Output[bool]) {
 	m.deleteSetups = append(m.deleteSetups, MockCacheDeleteSetup[K, V]{
-		key:     key,
+		key: key,
 		output0: output0,
 	})
 }
@@ -312,7 +381,12 @@ func (m *MockCache[K, V]) VerifyDelete(count mq.Count, key mq.Input[K]) {
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Cache.Delete: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Cache.Delete: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.deleteCalls))
+		for i, call := range m.deleteCalls {
+			msg += fmt.Sprintf("  [%d] key=%+v\n", i, call.key)
+		}
+		panic(msg)
 	}
 }
 
@@ -327,5 +401,15 @@ func (m *MockCache[K, V]) Delete(key K) bool {
 		}
 	}
 
-	panic("no mock setup found for MockCache.Delete with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockCache.Delete with the provided arguments: key=%+v\n", key)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.deleteSetups))
+	for i, setup := range m.deleteSetups {
+		msg += fmt.Sprintf("  [%d] key=%+v\n", i, setup.key)
+	}
+	if len(m.deleteSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
+

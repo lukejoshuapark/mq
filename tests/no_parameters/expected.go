@@ -40,7 +40,12 @@ func (m *MockStatusProvider) VerifyGetStatus(count mq.Count) {
 	c := len(m.getStatusCalls)
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for StatusProvider.GetStatus: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for StatusProvider.GetStatus: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getStatusCalls))
+		for i := range m.getStatusCalls {
+			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+		}
+		panic(msg)
 	}
 }
 
@@ -51,7 +56,16 @@ func (m *MockStatusProvider) GetStatus() string {
 		return m.getStatusSetups[0].output0.Value()
 	}
 
-	panic("no mock setup found for MockStatusProvider.GetStatus with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := "no mock setup found for MockStatusProvider.GetStatus\n"
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.getStatusSetups))
+	for i := range m.getStatusSetups {
+		msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+	}
+	if len(m.getStatusSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockStatusProviderIsReadySetup struct {
@@ -75,7 +89,12 @@ func (m *MockStatusProvider) VerifyIsReady(count mq.Count) {
 	c := len(m.isReadyCalls)
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for StatusProvider.IsReady: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for StatusProvider.IsReady: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.isReadyCalls))
+		for i := range m.isReadyCalls {
+			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+		}
+		panic(msg)
 	}
 }
 
@@ -86,7 +105,16 @@ func (m *MockStatusProvider) IsReady() (bool, error) {
 		return m.isReadySetups[0].output0.Value(), m.isReadySetups[0].output1.Value()
 	}
 
-	panic("no mock setup found for MockStatusProvider.IsReady with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := "no mock setup found for MockStatusProvider.IsReady\n"
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.isReadySetups))
+	for i := range m.isReadySetups {
+		msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+	}
+	if len(m.isReadySetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockStatusProviderRefreshSetup struct {
@@ -106,7 +134,12 @@ func (m *MockStatusProvider) VerifyRefresh(count mq.Count) {
 	c := len(m.refreshCalls)
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for StatusProvider.Refresh: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for StatusProvider.Refresh: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.refreshCalls))
+		for i := range m.refreshCalls {
+			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+		}
+		panic(msg)
 	}
 }
 
@@ -117,6 +150,15 @@ func (m *MockStatusProvider) Refresh() () {
 		return 
 	}
 
-	panic("no mock setup found for MockStatusProvider.Refresh with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := "no mock setup found for MockStatusProvider.Refresh\n"
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.refreshSetups))
+	for i := range m.refreshSetups {
+		msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+	}
+	if len(m.refreshSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 

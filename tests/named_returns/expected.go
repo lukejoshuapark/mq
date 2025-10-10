@@ -51,7 +51,12 @@ func (m *MockDatabase) VerifyQuery(count mq.Count, sql mq.Input[string]) {
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Database.Query: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Database.Query: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.queryCalls))
+		for i, call := range m.queryCalls {
+			msg += fmt.Sprintf("  [%d] sql=%+v\n", i, call.sql)
+		}
+		panic(msg)
 	}
 }
 
@@ -66,7 +71,16 @@ func (m *MockDatabase) Query(sql string) (result string, err error) {
 		}
 	}
 
-	panic("no mock setup found for MockDatabase.Query with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockDatabase.Query with the provided arguments: sql=%+v\n", sql)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.querySetups))
+	for i, setup := range m.querySetups {
+		msg += fmt.Sprintf("  [%d] sql=%+v\n", i, setup.sql)
+	}
+	if len(m.querySetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockDatabaseExecuteSetup struct {
@@ -99,7 +113,12 @@ func (m *MockDatabase) VerifyExecute(count mq.Count, cmd mq.Input[string]) {
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Database.Execute: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Database.Execute: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.executeCalls))
+		for i, call := range m.executeCalls {
+			msg += fmt.Sprintf("  [%d] cmd=%+v\n", i, call.cmd)
+		}
+		panic(msg)
 	}
 }
 
@@ -114,7 +133,16 @@ func (m *MockDatabase) Execute(cmd string) (rowsAffected int, err error) {
 		}
 	}
 
-	panic("no mock setup found for MockDatabase.Execute with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockDatabase.Execute with the provided arguments: cmd=%+v\n", cmd)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.executeSetups))
+	for i, setup := range m.executeSetups {
+		msg += fmt.Sprintf("  [%d] cmd=%+v\n", i, setup.cmd)
+	}
+	if len(m.executeSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockDatabaseConnectSetup struct {
@@ -138,7 +166,12 @@ func (m *MockDatabase) VerifyConnect(count mq.Count) {
 	c := len(m.connectCalls)
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Database.Connect: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Database.Connect: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.connectCalls))
+		for i := range m.connectCalls {
+			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+		}
+		panic(msg)
 	}
 }
 
@@ -149,6 +182,15 @@ func (m *MockDatabase) Connect() (conn *Connection, err error) {
 		return m.connectSetups[0].conn.Value(), m.connectSetups[0].err.Value()
 	}
 
-	panic("no mock setup found for MockDatabase.Connect with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := "no mock setup found for MockDatabase.Connect\n"
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.connectSetups))
+	for i := range m.connectSetups {
+		msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+	}
+	if len(m.connectSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 

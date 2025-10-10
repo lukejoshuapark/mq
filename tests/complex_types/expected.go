@@ -61,7 +61,12 @@ func (m *MockDataStore) VerifyQuery(count mq.Count, ctx mq.Input[context.Context
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for DataStore.Query: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for DataStore.Query: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.queryCalls))
+		for i, call := range m.queryCalls {
+			msg += fmt.Sprintf("  [%d] ctx=%+v, query=%+v, options=%+v\n", i, call.ctx, call.query, call.options)
+		}
+		panic(msg)
 	}
 }
 
@@ -78,7 +83,16 @@ func (m *MockDataStore) Query(ctx context.Context, query string, options *QueryO
 		}
 	}
 
-	panic("no mock setup found for MockDataStore.Query with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockDataStore.Query with the provided arguments: ctx=%+v, query=%+v, options=%+v\n", ctx, query, options)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.querySetups))
+	for i, setup := range m.querySetups {
+		msg += fmt.Sprintf("  [%d] ctx=%+v, query=%+v, options=%+v\n", i, setup.ctx, setup.query, setup.options)
+	}
+	if len(m.querySetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockDataStoreSaveSetup struct {
@@ -118,7 +132,12 @@ func (m *MockDataStore) VerifySave(count mq.Count, ctx mq.Input[context.Context]
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for DataStore.Save: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for DataStore.Save: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.saveCalls))
+		for i, call := range m.saveCalls {
+			msg += fmt.Sprintf("  [%d] ctx=%+v, key=%+v, value=%+v, ttl=%+v\n", i, call.ctx, call.key, call.value, call.ttl)
+		}
+		panic(msg)
 	}
 }
 
@@ -136,7 +155,16 @@ func (m *MockDataStore) Save(ctx context.Context, key string, value interface{},
 		}
 	}
 
-	panic("no mock setup found for MockDataStore.Save with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockDataStore.Save with the provided arguments: ctx=%+v, key=%+v, value=%+v, ttl=%+v\n", ctx, key, value, ttl)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.saveSetups))
+	for i, setup := range m.saveSetups {
+		msg += fmt.Sprintf("  [%d] ctx=%+v, key=%+v, value=%+v, ttl=%+v\n", i, setup.ctx, setup.key, setup.value, setup.ttl)
+	}
+	if len(m.saveSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockDataStoreGetMultipleSetup struct {
@@ -172,7 +200,12 @@ func (m *MockDataStore) VerifyGetMultiple(count mq.Count, ctx mq.Input[context.C
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for DataStore.GetMultiple: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for DataStore.GetMultiple: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getMultipleCalls))
+		for i, call := range m.getMultipleCalls {
+			msg += fmt.Sprintf("  [%d] ctx=%+v, keys=%+v\n", i, call.ctx, call.keys)
+		}
+		panic(msg)
 	}
 }
 
@@ -188,7 +221,16 @@ func (m *MockDataStore) GetMultiple(ctx context.Context, keys []string) ([]inter
 		}
 	}
 
-	panic("no mock setup found for MockDataStore.GetMultiple with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockDataStore.GetMultiple with the provided arguments: ctx=%+v, keys=%+v\n", ctx, keys)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.getMultipleSetups))
+	for i, setup := range m.getMultipleSetups {
+		msg += fmt.Sprintf("  [%d] ctx=%+v, keys=%+v\n", i, setup.ctx, setup.keys)
+	}
+	if len(m.getMultipleSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockDataStoreProcessBatchSetup struct {
@@ -224,7 +266,12 @@ func (m *MockDataStore) VerifyProcessBatch(count mq.Count, ctx mq.Input[context.
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for DataStore.ProcessBatch: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for DataStore.ProcessBatch: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.processBatchCalls))
+		for i, call := range m.processBatchCalls {
+			msg += fmt.Sprintf("  [%d] ctx=%+v, items=%+v\n", i, call.ctx, call.items)
+		}
+		panic(msg)
 	}
 }
 
@@ -240,6 +287,15 @@ func (m *MockDataStore) ProcessBatch(ctx context.Context, items ...interface{}) 
 		}
 	}
 
-	panic("no mock setup found for MockDataStore.ProcessBatch with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockDataStore.ProcessBatch with the provided arguments: ctx=%+v, items=%+v\n", ctx, items)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.processBatchSetups))
+	for i, setup := range m.processBatchSetups {
+		msg += fmt.Sprintf("  [%d] ctx=%+v, items=%+v\n", i, setup.ctx, setup.items)
+	}
+	if len(m.processBatchSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 

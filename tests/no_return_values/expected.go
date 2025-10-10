@@ -45,7 +45,12 @@ func (m *MockLogger) VerifyLog(count mq.Count, message mq.Input[string]) {
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Logger.Log: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Logger.Log: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.logCalls))
+		for i, call := range m.logCalls {
+			msg += fmt.Sprintf("  [%d] message=%+v\n", i, call.message)
+		}
+		panic(msg)
 	}
 }
 
@@ -60,7 +65,16 @@ func (m *MockLogger) Log(message string) () {
 		}
 	}
 
-	panic("no mock setup found for MockLogger.Log with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockLogger.Log with the provided arguments: message=%+v\n", message)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.logSetups))
+	for i, setup := range m.logSetups {
+		msg += fmt.Sprintf("  [%d] message=%+v\n", i, setup.message)
+	}
+	if len(m.logSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockLoggerLogWithLevelSetup struct {
@@ -92,7 +106,12 @@ func (m *MockLogger) VerifyLogWithLevel(count mq.Count, level mq.Input[string], 
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Logger.LogWithLevel: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Logger.LogWithLevel: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.logWithLevelCalls))
+		for i, call := range m.logWithLevelCalls {
+			msg += fmt.Sprintf("  [%d] level=%+v, message=%+v\n", i, call.level, call.message)
+		}
+		panic(msg)
 	}
 }
 
@@ -108,6 +127,15 @@ func (m *MockLogger) LogWithLevel(level string, message string) () {
 		}
 	}
 
-	panic("no mock setup found for MockLogger.LogWithLevel with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockLogger.LogWithLevel with the provided arguments: level=%+v, message=%+v\n", level, message)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.logWithLevelSetups))
+	for i, setup := range m.logWithLevelSetups {
+		msg += fmt.Sprintf("  [%d] level=%+v, message=%+v\n", i, setup.level, setup.message)
+	}
+	if len(m.logWithLevelSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 

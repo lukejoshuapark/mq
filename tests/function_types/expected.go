@@ -51,7 +51,12 @@ func (m *MockProcessor) VerifyApply(count mq.Count, fn mq.Input[func(int) int]) 
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Processor.Apply: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Processor.Apply: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.applyCalls))
+		for i, call := range m.applyCalls {
+			msg += fmt.Sprintf("  [%d] fn=%p\n", i, call.fn)
+		}
+		panic(msg)
 	}
 }
 
@@ -66,7 +71,16 @@ func (m *MockProcessor) Apply(fn func(int) int) error {
 		}
 	}
 
-	panic("no mock setup found for MockProcessor.Apply with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockProcessor.Apply with the provided arguments: fn=%p\n", fn)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.applySetups))
+	for i, setup := range m.applySetups {
+		msg += fmt.Sprintf("  [%d] fn=%p\n", i, setup.fn)
+	}
+	if len(m.applySetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockProcessorFilterSetup struct {
@@ -100,7 +114,12 @@ func (m *MockProcessor) VerifyFilter(count mq.Count, items mq.Input[[]string], p
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Processor.Filter: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Processor.Filter: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.filterCalls))
+		for i, call := range m.filterCalls {
+			msg += fmt.Sprintf("  [%d] items=%+v, predicate=%p\n", i, call.items, call.predicate)
+		}
+		panic(msg)
 	}
 }
 
@@ -116,7 +135,16 @@ func (m *MockProcessor) Filter(items []string, predicate func(string) bool) []st
 		}
 	}
 
-	panic("no mock setup found for MockProcessor.Filter with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockProcessor.Filter with the provided arguments: items=%+v, predicate=%p\n", items, predicate)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.filterSetups))
+	for i, setup := range m.filterSetups {
+		msg += fmt.Sprintf("  [%d] items=%+v, predicate=%p\n", i, setup.items, setup.predicate)
+	}
+	if len(m.filterSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockProcessorGetHandlerSetup struct {
@@ -138,7 +166,12 @@ func (m *MockProcessor) VerifyGetHandler(count mq.Count) {
 	c := len(m.getHandlerCalls)
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Processor.GetHandler: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Processor.GetHandler: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getHandlerCalls))
+		for i := range m.getHandlerCalls {
+			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+		}
+		panic(msg)
 	}
 }
 
@@ -149,7 +182,16 @@ func (m *MockProcessor) GetHandler() func(string) error {
 		return m.getHandlerSetups[0].output0.Value()
 	}
 
-	panic("no mock setup found for MockProcessor.GetHandler with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := "no mock setup found for MockProcessor.GetHandler\n"
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.getHandlerSetups))
+	for i := range m.getHandlerSetups {
+		msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
+	}
+	if len(m.getHandlerSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
 type MockProcessorTransformSetup struct {
@@ -183,7 +225,12 @@ func (m *MockProcessor) VerifyTransform(count mq.Count, data mq.Input[interface{
 	}
 
 	if !count.ShouldPass(c) {
-		panic(fmt.Sprintf("mock verification failed for Processor.Transform: expected count not met (actual: %d)", c))
+		msg := fmt.Sprintf("mock verification failed for Processor.Transform: expected count not met (actual: %d)\n", c)
+		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.transformCalls))
+		for i, call := range m.transformCalls {
+			msg += fmt.Sprintf("  [%d] data=%+v, mapper=%p\n", i, call.data, call.mapper)
+		}
+		panic(msg)
 	}
 }
 
@@ -199,6 +246,15 @@ func (m *MockProcessor) Transform(data interface{}, mapper func(interface{}) int
 		}
 	}
 
-	panic("no mock setup found for MockProcessor.Transform with the provided arguments")
+	// No matching setup found, generate helpful error message
+	msg := fmt.Sprintf("no mock setup found for MockProcessor.Transform with the provided arguments: data=%+v, mapper=%p\n", data, mapper)
+	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.transformSetups))
+	for i, setup := range m.transformSetups {
+		msg += fmt.Sprintf("  [%d] data=%+v, mapper=%p\n", i, setup.data, setup.mapper)
+	}
+	if len(m.transformSetups) == 0 {
+		msg += "  (no setups registered)\n"
+	}
+	panic(msg)
 }
 
