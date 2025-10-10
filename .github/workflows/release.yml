@@ -42,7 +42,7 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
             output_name="mq.exe"
           fi
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o build/$output_name .
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o build/$output_name ./cmd/mq
 
       - name: Package artifact
         run: |
