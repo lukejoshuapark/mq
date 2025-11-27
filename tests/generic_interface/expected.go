@@ -55,7 +55,7 @@ func (m *MockRepository[T]) VerifyGet(count mq.Count, ctx mq.Input[context.Conte
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Repository.Get: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Repository.Get: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getCalls))
 		for i, call := range m.getCalls {
 			msg += fmt.Sprintf("  [%d] ctx=%+v, id=%+v\n", i, call.ctx, call.id)
@@ -80,7 +80,7 @@ func (m *MockRepository[T]) Get(ctx context.Context, id string) (T, error) {
 	msg := fmt.Sprintf("no mock setup found for MockRepository.Get with the provided arguments: ctx=%+v, id=%+v\n", ctx, id)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.getSetups))
 	for i, setup := range m.getSetups {
-		msg += fmt.Sprintf("  [%d] ctx=%+v, id=%+v\n", i, setup.ctx, setup.id)
+		msg += fmt.Sprintf("  [%d] ctx=%s, id=%s\n", i, setup.ctx, setup.id)
 	}
 	if len(m.getSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -119,7 +119,7 @@ func (m *MockRepository[T]) VerifySave(count mq.Count, ctx mq.Input[context.Cont
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Repository.Save: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Repository.Save: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.saveCalls))
 		for i, call := range m.saveCalls {
 			msg += fmt.Sprintf("  [%d] ctx=%+v, item=%+v\n", i, call.ctx, call.item)
@@ -144,7 +144,7 @@ func (m *MockRepository[T]) Save(ctx context.Context, item T) error {
 	msg := fmt.Sprintf("no mock setup found for MockRepository.Save with the provided arguments: ctx=%+v, item=%+v\n", ctx, item)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.saveSetups))
 	for i, setup := range m.saveSetups {
-		msg += fmt.Sprintf("  [%d] ctx=%+v, item=%+v\n", i, setup.ctx, setup.item)
+		msg += fmt.Sprintf("  [%d] ctx=%s, item=%s\n", i, setup.ctx, setup.item)
 	}
 	if len(m.saveSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -182,7 +182,7 @@ func (m *MockRepository[T]) VerifyList(count mq.Count, ctx mq.Input[context.Cont
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Repository.List: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Repository.List: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.listCalls))
 		for i, call := range m.listCalls {
 			msg += fmt.Sprintf("  [%d] ctx=%+v\n", i, call.ctx)
@@ -206,7 +206,7 @@ func (m *MockRepository[T]) List(ctx context.Context) ([]T, error) {
 	msg := fmt.Sprintf("no mock setup found for MockRepository.List with the provided arguments: ctx=%+v\n", ctx)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.listSetups))
 	for i, setup := range m.listSetups {
-		msg += fmt.Sprintf("  [%d] ctx=%+v\n", i, setup.ctx)
+		msg += fmt.Sprintf("  [%d] ctx=%s\n", i, setup.ctx)
 	}
 	if len(m.listSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -259,7 +259,7 @@ func (m *MockCache[K, V]) VerifyGet(count mq.Count, key mq.Input[K]) {
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Cache.Get: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Cache.Get: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getCalls))
 		for i, call := range m.getCalls {
 			msg += fmt.Sprintf("  [%d] key=%+v\n", i, call.key)
@@ -283,7 +283,7 @@ func (m *MockCache[K, V]) Get(key K) (V, bool) {
 	msg := fmt.Sprintf("no mock setup found for MockCache.Get with the provided arguments: key=%+v\n", key)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.getSetups))
 	for i, setup := range m.getSetups {
-		msg += fmt.Sprintf("  [%d] key=%+v\n", i, setup.key)
+		msg += fmt.Sprintf("  [%d] key=%s\n", i, setup.key)
 	}
 	if len(m.getSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -320,7 +320,7 @@ func (m *MockCache[K, V]) VerifySet(count mq.Count, key mq.Input[K], value mq.In
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Cache.Set: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Cache.Set: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.setCalls))
 		for i, call := range m.setCalls {
 			msg += fmt.Sprintf("  [%d] key=%+v, value=%+v\n", i, call.key, call.value)
@@ -345,7 +345,7 @@ func (m *MockCache[K, V]) Set(key K, value V) () {
 	msg := fmt.Sprintf("no mock setup found for MockCache.Set with the provided arguments: key=%+v, value=%+v\n", key, value)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.setSetups))
 	for i, setup := range m.setSetups {
-		msg += fmt.Sprintf("  [%d] key=%+v, value=%+v\n", i, setup.key, setup.value)
+		msg += fmt.Sprintf("  [%d] key=%s, value=%s\n", i, setup.key, setup.value)
 	}
 	if len(m.setSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -381,7 +381,7 @@ func (m *MockCache[K, V]) VerifyDelete(count mq.Count, key mq.Input[K]) {
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Cache.Delete: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Cache.Delete: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.deleteCalls))
 		for i, call := range m.deleteCalls {
 			msg += fmt.Sprintf("  [%d] key=%+v\n", i, call.key)
@@ -405,7 +405,7 @@ func (m *MockCache[K, V]) Delete(key K) bool {
 	msg := fmt.Sprintf("no mock setup found for MockCache.Delete with the provided arguments: key=%+v\n", key)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.deleteSetups))
 	for i, setup := range m.deleteSetups {
-		msg += fmt.Sprintf("  [%d] key=%+v\n", i, setup.key)
+		msg += fmt.Sprintf("  [%d] key=%s\n", i, setup.key)
 	}
 	if len(m.deleteSetups) == 0 {
 		msg += "  (no setups registered)\n"

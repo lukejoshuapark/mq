@@ -47,7 +47,7 @@ func (m *MockSimpleService) VerifyDoSomething(count mq.Count, input mq.Input[str
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for SimpleService.DoSomething: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for SimpleService.DoSomething: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.doSomethingCalls))
 		for i, call := range m.doSomethingCalls {
 			msg += fmt.Sprintf("  [%d] input=%+v\n", i, call.input)
@@ -71,7 +71,7 @@ func (m *MockSimpleService) DoSomething(input string) (string, error) {
 	msg := fmt.Sprintf("no mock setup found for MockSimpleService.DoSomething with the provided arguments: input=%+v\n", input)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.doSomethingSetups))
 	for i, setup := range m.doSomethingSetups {
-		msg += fmt.Sprintf("  [%d] input=%+v\n", i, setup.input)
+		msg += fmt.Sprintf("  [%d] input=%s\n", i, setup.input)
 	}
 	if len(m.doSomethingSetups) == 0 {
 		msg += "  (no setups registered)\n"

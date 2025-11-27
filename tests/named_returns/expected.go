@@ -51,7 +51,7 @@ func (m *MockDatabase) VerifyQuery(count mq.Count, sql mq.Input[string]) {
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Database.Query: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Database.Query: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.queryCalls))
 		for i, call := range m.queryCalls {
 			msg += fmt.Sprintf("  [%d] sql=%+v\n", i, call.sql)
@@ -75,7 +75,7 @@ func (m *MockDatabase) Query(sql string) (result string, err error) {
 	msg := fmt.Sprintf("no mock setup found for MockDatabase.Query with the provided arguments: sql=%+v\n", sql)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.querySetups))
 	for i, setup := range m.querySetups {
-		msg += fmt.Sprintf("  [%d] sql=%+v\n", i, setup.sql)
+		msg += fmt.Sprintf("  [%d] sql=%s\n", i, setup.sql)
 	}
 	if len(m.querySetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -113,7 +113,7 @@ func (m *MockDatabase) VerifyExecute(count mq.Count, cmd mq.Input[string]) {
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Database.Execute: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Database.Execute: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.executeCalls))
 		for i, call := range m.executeCalls {
 			msg += fmt.Sprintf("  [%d] cmd=%+v\n", i, call.cmd)
@@ -137,7 +137,7 @@ func (m *MockDatabase) Execute(cmd string) (rowsAffected int, err error) {
 	msg := fmt.Sprintf("no mock setup found for MockDatabase.Execute with the provided arguments: cmd=%+v\n", cmd)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.executeSetups))
 	for i, setup := range m.executeSetups {
-		msg += fmt.Sprintf("  [%d] cmd=%+v\n", i, setup.cmd)
+		msg += fmt.Sprintf("  [%d] cmd=%s\n", i, setup.cmd)
 	}
 	if len(m.executeSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -166,7 +166,7 @@ func (m *MockDatabase) VerifyConnect(count mq.Count) {
 	c := len(m.connectCalls)
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for Database.Connect: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for Database.Connect: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.connectCalls))
 		for i := range m.connectCalls {
 			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)

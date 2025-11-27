@@ -57,7 +57,7 @@ func (m *MockUserRepository) VerifyFindByEmail(count mq.Count, ctx mq.Input[cont
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for UserRepository.FindByEmail: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for UserRepository.FindByEmail: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.findByEmailCalls))
 		for i, call := range m.findByEmailCalls {
 			msg += fmt.Sprintf("  [%d] ctx=%+v, email=%+v\n", i, call.ctx, call.email)
@@ -82,7 +82,7 @@ func (m *MockUserRepository) FindByEmail(ctx context.Context, email string) (*Us
 	msg := fmt.Sprintf("no mock setup found for MockUserRepository.FindByEmail with the provided arguments: ctx=%+v, email=%+v\n", ctx, email)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.findByEmailSetups))
 	for i, setup := range m.findByEmailSetups {
-		msg += fmt.Sprintf("  [%d] ctx=%+v, email=%+v\n", i, setup.ctx, setup.email)
+		msg += fmt.Sprintf("  [%d] ctx=%s, email=%s\n", i, setup.ctx, setup.email)
 	}
 	if len(m.findByEmailSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -121,7 +121,7 @@ func (m *MockUserRepository) VerifyCreateUser(count mq.Count, ctx mq.Input[conte
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for UserRepository.CreateUser: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for UserRepository.CreateUser: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.createUserCalls))
 		for i, call := range m.createUserCalls {
 			msg += fmt.Sprintf("  [%d] ctx=%+v, user=%+v\n", i, call.ctx, call.user)
@@ -146,7 +146,7 @@ func (m *MockUserRepository) CreateUser(ctx context.Context, user *User) error {
 	msg := fmt.Sprintf("no mock setup found for MockUserRepository.CreateUser with the provided arguments: ctx=%+v, user=%+v\n", ctx, user)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.createUserSetups))
 	for i, setup := range m.createUserSetups {
-		msg += fmt.Sprintf("  [%d] ctx=%+v, user=%+v\n", i, setup.ctx, setup.user)
+		msg += fmt.Sprintf("  [%d] ctx=%s, user=%s\n", i, setup.ctx, setup.user)
 	}
 	if len(m.createUserSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -185,7 +185,7 @@ func (m *MockUserRepository) VerifyDeleteUser(count mq.Count, ctx mq.Input[conte
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for UserRepository.DeleteUser: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for UserRepository.DeleteUser: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.deleteUserCalls))
 		for i, call := range m.deleteUserCalls {
 			msg += fmt.Sprintf("  [%d] ctx=%+v, id=%+v\n", i, call.ctx, call.id)
@@ -210,7 +210,7 @@ func (m *MockUserRepository) DeleteUser(ctx context.Context, id int) error {
 	msg := fmt.Sprintf("no mock setup found for MockUserRepository.DeleteUser with the provided arguments: ctx=%+v, id=%+v\n", ctx, id)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.deleteUserSetups))
 	for i, setup := range m.deleteUserSetups {
-		msg += fmt.Sprintf("  [%d] ctx=%+v, id=%+v\n", i, setup.ctx, setup.id)
+		msg += fmt.Sprintf("  [%d] ctx=%s, id=%s\n", i, setup.ctx, setup.id)
 	}
 	if len(m.deleteUserSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -248,7 +248,7 @@ func (m *MockUserRepository) VerifyListUsers(count mq.Count, ctx mq.Input[contex
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for UserRepository.ListUsers: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for UserRepository.ListUsers: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.listUsersCalls))
 		for i, call := range m.listUsersCalls {
 			msg += fmt.Sprintf("  [%d] ctx=%+v\n", i, call.ctx)
@@ -272,7 +272,7 @@ func (m *MockUserRepository) ListUsers(ctx context.Context) ([]*User, error) {
 	msg := fmt.Sprintf("no mock setup found for MockUserRepository.ListUsers with the provided arguments: ctx=%+v\n", ctx)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.listUsersSetups))
 	for i, setup := range m.listUsersSetups {
-		msg += fmt.Sprintf("  [%d] ctx=%+v\n", i, setup.ctx)
+		msg += fmt.Sprintf("  [%d] ctx=%s\n", i, setup.ctx)
 	}
 	if len(m.listUsersSetups) == 0 {
 		msg += "  (no setups registered)\n"

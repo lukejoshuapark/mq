@@ -322,7 +322,7 @@ func generateVerifyMethod(structName string, interfaceName string, interfaceType
 	}
 
 	// Generate detailed error message with all calls made
-	if _, err := w.WriteString("\t\tmsg := fmt.Sprintf(\"mock verification failed for " + interfaceName + "." + method.Name + ": expected count not met (actual: %d)\\n\", c)\n"); err != nil {
+	if _, err := w.WriteString("\t\tmsg := fmt.Sprintf(\"mock verification failed for " + interfaceName + "." + method.Name + ": expected %s (count: %d)\\n\", count, c)\n"); err != nil {
 		return err
 	}
 
@@ -602,8 +602,8 @@ func generateActualMethod(structName string, interfaceTypeParams string, typePar
 					return err
 				}
 			}
-			formatVerb := getFormatVerb(input.Type)
-			if _, err := w.WriteString(input.Name + "=" + formatVerb); err != nil {
+
+			if _, err := w.WriteString(input.Name + "=%s"); err != nil {
 				return err
 			}
 		}

@@ -40,7 +40,7 @@ func (m *MockStatusProvider) VerifyGetStatus(count mq.Count) {
 	c := len(m.getStatusCalls)
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for StatusProvider.GetStatus: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for StatusProvider.GetStatus: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.getStatusCalls))
 		for i := range m.getStatusCalls {
 			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
@@ -89,7 +89,7 @@ func (m *MockStatusProvider) VerifyIsReady(count mq.Count) {
 	c := len(m.isReadyCalls)
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for StatusProvider.IsReady: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for StatusProvider.IsReady: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.isReadyCalls))
 		for i := range m.isReadyCalls {
 			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
@@ -134,7 +134,7 @@ func (m *MockStatusProvider) VerifyRefresh(count mq.Count) {
 	c := len(m.refreshCalls)
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for StatusProvider.Refresh: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for StatusProvider.Refresh: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.refreshCalls))
 		for i := range m.refreshCalls {
 			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)

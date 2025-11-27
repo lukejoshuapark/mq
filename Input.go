@@ -1,10 +1,14 @@
 package mq
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 type Input[T any] struct {
-	v T
-	f func(v T) bool
+	v           T
+	f           func(v T) bool
+	description string
 }
 
 func (i Input[T]) Compare(v T) bool {
@@ -13,6 +17,23 @@ func (i Input[T]) Compare(v T) bool {
 	}
 
 	return i.f(v)
+}
+
+func (i Input[T]) String() string {
+	if i.description != "" {
+		return i.description
+	}
+
+	if i.f == nil {
+		return fmt.Sprintf("%+v", i.v)
+	}
+
+	return "(custom matcher)"
+}
+
+func (i Input[T]) WithDescription(description string) Input[T] {
+	i.description = description
+	return i
 }
 
 func IsExactly[T any](v T) Input[T] {

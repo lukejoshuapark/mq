@@ -42,7 +42,7 @@ func (m *MockEventBus) VerifySubscribe(count mq.Count) {
 	c := len(m.subscribeCalls)
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for EventBus.Subscribe: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for EventBus.Subscribe: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.subscribeCalls))
 		for i := range m.subscribeCalls {
 			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
@@ -98,7 +98,7 @@ func (m *MockEventBus) VerifyPublish(count mq.Count, events mq.Input[chan<- Even
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for EventBus.Publish: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for EventBus.Publish: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.publishCalls))
 		for i, call := range m.publishCalls {
 			msg += fmt.Sprintf("  [%d] events=%+v\n", i, call.events)
@@ -122,7 +122,7 @@ func (m *MockEventBus) Publish(events chan<- Event) error {
 	msg := fmt.Sprintf("no mock setup found for MockEventBus.Publish with the provided arguments: events=%+v\n", events)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.publishSetups))
 	for i, setup := range m.publishSetups {
-		msg += fmt.Sprintf("  [%d] events=%+v\n", i, setup.events)
+		msg += fmt.Sprintf("  [%d] events=%s\n", i, setup.events)
 	}
 	if len(m.publishSetups) == 0 {
 		msg += "  (no setups registered)\n"
@@ -149,7 +149,7 @@ func (m *MockEventBus) VerifyStream(count mq.Count) {
 	c := len(m.streamCalls)
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for EventBus.Stream: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for EventBus.Stream: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.streamCalls))
 		for i := range m.streamCalls {
 			msg += fmt.Sprintf("  [%d] (no parameters)\n", i)
@@ -203,7 +203,7 @@ func (m *MockEventBus) VerifyClose(count mq.Count, done mq.Input[<-chan struct{}
 	}
 
 	if !count.ShouldPass(c) {
-		msg := fmt.Sprintf("mock verification failed for EventBus.Close: expected count not met (actual: %d)\n", c)
+		msg := fmt.Sprintf("mock verification failed for EventBus.Close: expected %s (count: %d)\n", count, c)
 		msg += fmt.Sprintf("Calls made (%d total):\n", len(m.closeCalls))
 		for i, call := range m.closeCalls {
 			msg += fmt.Sprintf("  [%d] done=%+v\n", i, call.done)
@@ -227,7 +227,7 @@ func (m *MockEventBus) Close(done <-chan struct{}) () {
 	msg := fmt.Sprintf("no mock setup found for MockEventBus.Close with the provided arguments: done=%+v\n", done)
 	msg += fmt.Sprintf("\nSetups registered (%d total):\n", len(m.closeSetups))
 	for i, setup := range m.closeSetups {
-		msg += fmt.Sprintf("  [%d] done=%+v\n", i, setup.done)
+		msg += fmt.Sprintf("  [%d] done=%s\n", i, setup.done)
 	}
 	if len(m.closeSetups) == 0 {
 		msg += "  (no setups registered)\n"
