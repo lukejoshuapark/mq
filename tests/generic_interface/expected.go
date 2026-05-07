@@ -329,7 +329,7 @@ func (m *MockCache[K, V]) VerifySet(count mq.Count, key mq.Input[K], value mq.In
 	}
 }
 
-func (m *MockCache[K, V]) Set(key K, value V) () {
+func (m *MockCache[K, V]) Set(key K, value V) {
 	for _, setup := range m.setSetups {
 		if setup.key.Compare(key) && setup.value.Compare(value) {
 			m.setCalls = append(m.setCalls, MockCacheSetCall[K, V]{
@@ -337,7 +337,7 @@ func (m *MockCache[K, V]) Set(key K, value V) () {
 				value: value,
 			})
 
-			return 
+			return
 		}
 	}
 

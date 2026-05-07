@@ -212,14 +212,14 @@ func (m *MockEventBus) VerifyClose(count mq.Count, done mq.Input[<-chan struct{}
 	}
 }
 
-func (m *MockEventBus) Close(done <-chan struct{}) () {
+func (m *MockEventBus) Close(done <-chan struct{}) {
 	for _, setup := range m.closeSetups {
 		if setup.done.Compare(done) {
 			m.closeCalls = append(m.closeCalls, MockEventBusCloseCall{
 				done: done,
 			})
 
-			return 
+			return
 		}
 	}
 

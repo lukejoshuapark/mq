@@ -143,11 +143,11 @@ func (m *MockStatusProvider) VerifyRefresh(count mq.Count) {
 	}
 }
 
-func (m *MockStatusProvider) Refresh() () {
+func (m *MockStatusProvider) Refresh() {
 	if len(m.refreshSetups) > 0 {
 		m.refreshCalls = append(m.refreshCalls, MockStatusProviderRefreshCall{})
 
-		return 
+		return
 	}
 
 	// No matching setup found, generate helpful error message

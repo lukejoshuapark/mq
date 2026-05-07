@@ -54,14 +54,14 @@ func (m *MockLogger) VerifyLog(count mq.Count, message mq.Input[string]) {
 	}
 }
 
-func (m *MockLogger) Log(message string) () {
+func (m *MockLogger) Log(message string) {
 	for _, setup := range m.logSetups {
 		if setup.message.Compare(message) {
 			m.logCalls = append(m.logCalls, MockLoggerLogCall{
 				message: message,
 			})
 
-			return 
+			return
 		}
 	}
 
@@ -115,7 +115,7 @@ func (m *MockLogger) VerifyLogWithLevel(count mq.Count, level mq.Input[string], 
 	}
 }
 
-func (m *MockLogger) LogWithLevel(level string, message string) () {
+func (m *MockLogger) LogWithLevel(level string, message string) {
 	for _, setup := range m.logWithLevelSetups {
 		if setup.level.Compare(level) && setup.message.Compare(message) {
 			m.logWithLevelCalls = append(m.logWithLevelCalls, MockLoggerLogWithLevelCall{
@@ -123,7 +123,7 @@ func (m *MockLogger) LogWithLevel(level string, message string) () {
 				message: message,
 			})
 
-			return 
+			return
 		}
 	}
 

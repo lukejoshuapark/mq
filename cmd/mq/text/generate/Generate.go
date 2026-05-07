@@ -414,7 +414,11 @@ func generateActualMethod(structName string, interfaceTypeParams string, typePar
 		return err
 	}
 
-	if len(method.Outputs) == 1 && method.Outputs[0].Name == "" {
+	if len(method.Outputs) == 0 {
+		if _, err := w.WriteString("{\n"); err != nil {
+			return err
+		}
+	} else if len(method.Outputs) == 1 && method.Outputs[0].Name == "" {
 		if _, err := w.WriteString(method.Outputs[0].Type + " {\n"); err != nil {
 			return err
 		}
@@ -488,26 +492,32 @@ func generateActualMethod(structName string, interfaceTypeParams string, typePar
 			return err
 		}
 
-		if _, err := w.WriteString("\t\t\treturn "); err != nil {
-			return err
-		}
+		if len(method.Outputs) > 0 {
+			if _, err := w.WriteString("\t\t\treturn "); err != nil {
+				return err
+			}
 
-		for i, output := range method.Outputs {
-			outputName := getOutputName(output, i)
+			for i, output := range method.Outputs {
+				outputName := getOutputName(output, i)
 
-			if i != 0 {
-				if _, err := w.WriteString(", "); err != nil {
+				if i != 0 {
+					if _, err := w.WriteString(", "); err != nil {
+						return err
+					}
+				}
+
+				if _, err := w.WriteString("setup." + outputName + ".Value()"); err != nil {
 					return err
 				}
 			}
 
-			if _, err := w.WriteString("setup." + outputName + ".Value()"); err != nil {
+			if _, err := w.WriteString("\n\t\t}\n\t}\n\n"); err != nil {
 				return err
 			}
-		}
-
-		if _, err := w.WriteString("\n\t\t}\n\t}\n\n"); err != nil {
-			return err
+		} else {
+			if _, err := w.WriteString("\t\t\treturn\n\t\t}\n\t}\n\n"); err != nil {
+				return err
+			}
 		}
 	} else {
 		// For methods with no inputs, just use the first setup if it exists
@@ -519,26 +529,32 @@ func generateActualMethod(structName string, interfaceTypeParams string, typePar
 			return err
 		}
 
-		if _, err := w.WriteString("\t\treturn "); err != nil {
-			return err
-		}
+		if len(method.Outputs) > 0 {
+			if _, err := w.WriteString("\t\treturn "); err != nil {
+				return err
+			}
 
-		for i, output := range method.Outputs {
-			outputName := getOutputName(output, i)
+			for i, output := range method.Outputs {
+				outputName := getOutputName(output, i)
 
-			if i != 0 {
-				if _, err := w.WriteString(", "); err != nil {
+				if i != 0 {
+					if _, err := w.WriteString(", "); err != nil {
+						return err
+					}
+				}
+
+				if _, err := w.WriteString("m." + lowerCaseName + "Setups[0]." + outputName + ".Value()"); err != nil {
 					return err
 				}
 			}
 
-			if _, err := w.WriteString("m." + lowerCaseName + "Setups[0]." + outputName + ".Value()"); err != nil {
+			if _, err := w.WriteString("\n\t}\n\n"); err != nil {
 				return err
 			}
-		}
-
-		if _, err := w.WriteString("\n\t}\n\n"); err != nil {
-			return err
+		} else {
+			if _, err := w.WriteString("\t\treturn\n\t}\n\n"); err != nil {
+				return err
+			}
 		}
 	}
 
